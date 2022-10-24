@@ -86,7 +86,7 @@
 5. `/admin` 접속하여 admin 계정으로 로그인하기
 6. `Admin Panel`을 접속했다면 서버 준비완료
 
-### 1.0 Django Application
+## 1.0 Django Application
 - App은 마치 Folder와 같다. 특정 주제의 Data와 그러한 Logic을 한 곳에 모아놓은 곳이다.
 ### 1.1 App을 Create하고 Configure하기
 ```shell
@@ -100,8 +100,55 @@ python manage.py startapp [APPNAME_PLURAL]
     ]
   ```
 ### 1.2 App Model를 Create하기
-### 1.3 App AdminPanel를 Configure하기
+- `django.db.models`를 import하기
+- `models.Model`을 inherit한 App Model을 Create하기
+  ```python3
+  from django.db import models
 
-### 2.0 User App
-- User App을 새로 만들기보다 Django에서 제공하는 User App을 확장하는 게 효과적이다
-- 
+  class Room(models.Model):
+    ...
+  ```
+### 1.3 App AdminPanel를 Configure하기
+- `django.contrib.admin`를 import하기
+- `admin.ModelAdmin`을 inherit한 App Admin을 Create하기
+  - Model을 `@(Decorator)`로 언급하기
+  ```python3
+  from django.contrib import admin
+  from . import models
+
+  @admin.register(models.Room)
+  class RoomAdmin(admin.ModelAdmin):
+    ...
+  ```
+
+## 2.0 User App
+- User App을 새로 처음부터 만들기보다 Django에서 제공하는 User App을 확장하는 게 효과적이다
+- 첫 migration 전에 미리 Custom User를 세팅하는 것이 바람직하다.
+- 만약 이미 어느정도 작업했다면 `db.sqlite3`과 `__init__`파일을 제외한 모든 각 App 폴더의 `migrations/` 파일을 삭제하고 Custom User를 세팅한다.
+### 2.1 Custom User App 세팅하기
+1. `users` App을 create하기
+2. `AUTH_USER_MODEL`을 정하기
+   - `config.settings`에 Django User를 inherit 받을 User App을 `AUTH_USER_MODEL`하겠다고 설정한다.
+   ```
+   AUTH_USER_MODEL = "users.User"
+   ```
+   - `django.contrib.auth.models.AbstractUser`을 import하기
+3. `User Model` 만들기
+   - Model의 경우, `models.Model` 대신에 `AbstractUser`을 inherit하기
+   ```python3
+   from django.contrib.auth.models import AbstractUser
+   
+   class User(AbstractUser):
+     ...
+   ```
+4. `User AdminPanel` 만들기
+   - `django.contrib.auth.admin.UserAdmin`을 import하기
+   - Admin의 경우, `admin.UserAdmin` 대신에 `UserAdmin`을 inherit하기
+   ```python3
+   from django.contrib.auth.admin import UserAdmin
+   from . import models
+   
+   @admin.register(models.User)
+   class CustomUserAdmin(UserAdmin):
+     ...
+   ```

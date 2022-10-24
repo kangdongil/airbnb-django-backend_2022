@@ -108,6 +108,25 @@ python manage.py startapp [APPNAME_PLURAL]
   class Room(models.Model):
     ...
   ```
+#### 1.2.1 Model Field와 종류 살펴보기
+- `Field`는 models의 메서드로 특정 속성을 가진 데이터형을 제시한다.
+```python3
+class Model([]):
+  [FIELD] = models.[FieldType](~)
+```
+- 짧은 텍스트는 `CharField`로 하고, `max_length`를 필수로 가진다
+- 긴 텍스트는 `TextField`를 사용한다
+- 참거짓값은 `BooleanField`, 양의 정수값은 `PositiveIntegerField`를 사용한다
+- 이미지파일은 `ImageField`를 사용하며 파이썬 패키지 `Pillow`를 필요로 한다
+#### 1.2.2 `Default` / `Blank` / `Null`
+- `Default`는 Client가 값을 입력하지 않았을 때 주는 기본값이며,   
+  기존 데이터가 새로운 Field가 추가되었을 때 가지는 값이기도 하다
+- `Blank`는 Client 측에서 Form Input을 비웠을 때 허용하는지 여부를 정한다
+- `Null`는 DB 측에서 Null값을 허용하는지 여부를 정한다
+#### 1.2.3 Model 형태가 달라지면 Migration하기
+- Model을 새로 만들거나 수정하였을 때,   
+  해당 코드에 맞게 DB형태를 바꾸는 과정을 `migration`이라 한다.
+- `python manage.py makemigration`과 `python manage.py migrate`을 연이어 적용한다.
 ### 1.3 App AdminPanel를 Configure하기
 - `django.contrib.admin`를 import하기
 - `admin.ModelAdmin`을 inherit한 App Admin을 Create하기
@@ -120,6 +139,11 @@ python manage.py startapp [APPNAME_PLURAL]
   class RoomAdmin(admin.ModelAdmin):
     ...
   ```
+### 1.3.1 AdminPanel Option 살펴보기
+- `list_display`: Admin Panel에 보여줄 Column 속성들을 튜플로 정의하기
+- `list_filter`: Admin Panel 우측에 제공할 필터를 튜플로 정의하기
+- `fieldsets`
+
 
 ## 2.0 User App
 - User App을 새로 처음부터 만들기보다 Django에서 제공하는 User App을 확장하는 게 효과적이다
@@ -152,3 +176,25 @@ python manage.py startapp [APPNAME_PLURAL]
    class CustomUserAdmin(UserAdmin):
      ...
    ```
+### 2.2 User Model 만들기
+- [`AbstractUser`](https://github.com/django/django/blob/main/django/contrib/auth/models.py#L334-L402)가 가진 field를 참고하기
+- 기존의 `first_name`과 `last_name`은 사용 안하도록 `editable`을 `False`하기
+- 입력이 아닌 선택지를 주려면 `CharField`에 `choices` 항목을 주기
+  ```python3
+  gender = models.CharField(
+    max_length=5,
+    choices=GenderChoices.choices,
+    default=GenderChoices.MALE,
+  )
+  ```
+- Choices는 내부클래스로 정의한다
+  - `django.db.models.TextChoices`를 inherit한다
+  - 변수명은 `UPPERCASE`로 정하고, 튜플 안에 첫번째 항목은 DB에 저장되는 값으로 `lowercase`를, 두번째 항목은 Client가 보는 항목으로 `TitleCase`로 표기한다
+  ```python3
+  class GenderChoices(models.TextChoices):
+    MALE = ("male", "Male")
+    ...
+  ```
+### 2.3 User Admin 만들기
+- [`UserAdmin`](https://github.com/django/django/blob/main/django/contrib/auth/admin.py#L43-L83) 참고하기
+- 

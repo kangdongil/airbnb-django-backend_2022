@@ -59,6 +59,11 @@
   CSRF_TRUSTED_ORIGINS = ["https://*.ws-us72.gitpod.io"]
   # To use Server Timezone
   TIME_ZONE = "Asia/Seoul
+  # Modulize INSTALLED_APPS
+  SYSTEM_APPS=[ ... ]
+  CUSTOM_APPS=[ ... ]
+  THIRD_PARTY_APPS=[ ... ]
+  INSTALLED_APPS=SYSTEM_APPS+CUSTOM_APPS+THIRD_PARTY_APPS
   ```
 
 ### 0.4.2 Django Project Command(`manage.py`) 사용하기
@@ -80,3 +85,23 @@
 4. `python manage.py createsuperuser`
 5. `/admin` 접속하여 admin 계정으로 로그인하기
 6. `Admin Panel`을 접속했다면 서버 준비완료
+
+### 1.0 Django Application
+- App은 마치 Folder와 같다. 특정 주제의 Data와 그러한 Logic을 한 곳에 모아놓은 곳이다.
+### 1.1 App을 Create하고 Configure하기
+```shell
+python manage.py startapp [APPNAME_PLURAL]
+```
+- App의 이름은 `복수형`으로 하는게 관행이다
+- `apps.py`의 class(`~Config`)을 `config.settings`의 `CUSTOM_APPS`에 추가한다
+  ```python3
+    CUSTOM_APPS = [
+      "users.apps.UsersConfig",
+    ]
+  ```
+### 1.2 App Model를 Create하기
+### 1.3 App AdminPanel를 Configure하기
+
+### 2.0 User App
+- User App을 새로 만들기보다 Django에서 제공하는 User App을 확장하는 게 효과적이다
+- 

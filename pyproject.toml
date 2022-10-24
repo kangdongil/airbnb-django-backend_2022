@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "airbnb-221024"
+version = "0.1.0"
+description = ""
+authors = ["Noru <akang8150@naver.com>"]
+readme = "README.md"
+packages = [{include = "airbnb_221024"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+Django = "^4.1.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

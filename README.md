@@ -59,6 +59,11 @@
   CSRF_TRUSTED_ORIGINS = ["https://*.ws-us72.gitpod.io"]
   # To use Server Timezone
   TIME_ZONE = "Asia/Seoul
+  # Modulize INSTALLED_APPS
+  SYSTEM_APPS=[ ... ]
+  CUSTOM_APPS=[ ... ]
+  THIRD_PARTY_APPS=[ ... ]
+  INSTALLED_APPS=SYSTEM_APPS+CUSTOM_APPS+THIRD_PARTY_APPS
   ```
 
 ### 0.4.2 Django Project Command(`manage.py`) 사용하기
@@ -80,3 +85,140 @@
 4. `python manage.py createsuperuser`
 5. `/admin` 접속하여 admin 계정으로 로그인하기
 6. `Admin Panel`을 접속했다면 서버 준비완료
+
+## 1.0 Django Application
+- App은 마치 Folder와 같다. 특정 주제의 Data와 그러한 Logic을 한 곳에 모아놓은 곳이다.
+### 1.1 App을 Create하고 Configure하기
+```shell
+python manage.py startapp [APPNAME_PLURAL]
+```
+- App의 이름은 `복수형`으로 하는게 관행이다
+- `apps.py`의 class(`~Config`)을 `config.settings`의 `CUSTOM_APPS`에 추가한다
+  ```python3
+    CUSTOM_APPS = [
+      "users.apps.UsersConfig",
+    ]
+  ```
+### 1.2 App Model를 Create하기
+- `django.db.models`를 import하기
+- `models.Model`을 inherit한 App Model을 Create하기
+  ```python3
+  from django.db import models
+
+  class Room(models.Model):
+    ...
+  ```
+#### 1.2.1 Model Field와 종류 살펴보기
+- `Field`는 models의 메서드로 특정 속성을 가진 데이터형을 제시한다.
+```python3
+class Model([]):
+  [FIELD] = models.[FieldType](~)
+```
+- 짧은 텍스트는 `CharField`로 하고, `max_length`를 필수로 가진다
+- 긴 텍스트는 `TextField`를 사용한다
+- 참거짓값은 `BooleanField`, 양의 정수값은 `PositiveIntegerField`를 사용한다
+- 이미지파일은 `ImageField`를 사용하며 파이썬 패키지 `Pillow`를 필요로 한다
+#### 1.2.2 `Default` / `Blank` / `Null`
+- `Default`는 Client가 값을 입력하지 않았을 때 주는 기본값이며,   
+  기존 데이터가 새로운 Field가 추가되었을 때 가지는 값이기도 하다
+- `Blank`는 Client 측에서 Form Input을 비웠을 때 허용하는지 여부를 정한다
+- `Null`는 DB 측에서 Null값을 허용하는지 여부를 정한다
+#### 1.2.3 Model 형태가 달라지면 Migration하기
+- Model을 새로 만들거나 수정하였을 때,   
+  해당 코드에 맞게 DB형태를 바꾸는 과정을 `migration`이라 한다.
+- `python manage.py makemigration`과 `python manage.py migrate`을 연이어 적용한다.
+### 1.3 App AdminPanel를 Configure하기
+- `django.contrib.admin`를 import하기
+- `admin.ModelAdmin`을 inherit한 App Admin을 Create하기
+  - Model을 `@(Decorator)`로 언급하기
+  ```python3
+  from django.contrib import admin
+  from . import models
+
+  @admin.register(models.Room)
+  class RoomAdmin(admin.ModelAdmin):
+    ...
+  ```
+### 1.3.1 AdminPanel Option 살펴보기
+- `list_display`: Admin Panel에 보여줄 Column 속성들을 튜플로 정의하기
+```python3
+list_display = ("[Field]", ...)
+```
+- `list_filter`: Admin Panel 우측에 제공할 필터를 튜플로 정의하기
+```python3
+list_filter = ("[Field]", ...)
+```
+- `fieldsets`: Admin Panel에서 Data를 생성 또는 수정하는 화면 구성을 정의하기
+```python3
+fieldsets = (
+  ("[Section_Title]", {
+    "fields": (~),
+    "classes": (~),
+  }),
+  ...fieldset
+)
+```
+  - `fieldset`: 큰 Section으로 튜플로 정의한다
+  - `fields`: Admin Panel에서 다룰 Model Field 정의하기
+  - `classes`: FieldSet을 CSS 옵션을 추가한다
+    - `wide`: 화면을 더 넓게 사용하기
+    - `collapse`: fieldset을 접을 수 있게 한다
+  - 항목이 하나인 튜플에 `,`을 넣어 포맷팅으로 사라지는 오류를 방지하자
+  ```python3
+  {"fields": ("name",),}
+  ```
+
+## 2.0 User App
+- User App을 새로 처음부터 만들기보다 Django에서 제공하는 User App을 확장하는 게 효과적이다
+- 첫 migration 전에 미리 Custom User를 세팅하는 것이 바람직하다.
+- 만약 이미 어느정도 작업했다면 `db.sqlite3`과 `__init__`파일을 제외한 모든 각 App 폴더의 `migrations/` 파일을 삭제하고 Custom User를 세팅한다.
+### 2.1 Custom User App 세팅하기
+1. `users` App을 create하기
+2. `AUTH_USER_MODEL`을 정하기
+   - `config.settings`에 Django User를 inherit 받을 User App을 `AUTH_USER_MODEL`하겠다고 설정한다.
+   ```
+   AUTH_USER_MODEL = "users.User"
+   ```
+   - `django.contrib.auth.models.AbstractUser`을 import하기
+3. `User Model` 만들기
+   - Model의 경우, `models.Model` 대신에 `AbstractUser`을 inherit하기
+   ```python3
+   from django.contrib.auth.models import AbstractUser
+   
+   class User(AbstractUser):
+     ...
+   ```
+4. `User AdminPanel` 만들기
+   - `django.contrib.auth.admin.UserAdmin`을 import하기
+   - Admin의 경우, `admin.UserAdmin` 대신에 `UserAdmin`을 inherit하기
+   ```python3
+   from django.contrib.auth.admin import UserAdmin
+   from . import models
+   
+   @admin.register(models.User)
+   class CustomUserAdmin(UserAdmin):
+     ...
+   ```
+
+### 2.2 User Model 만들기
+- [`AbstractUser`](https://github.com/django/django/blob/main/django/contrib/auth/models.py#L334-L402)가 가진 field를 참고하기
+- 기존의 `first_name`과 `last_name`은 사용 안하도록 `editable`을 `False`하기
+- 입력이 아닌 선택지를 주려면 `CharField`에 `choices` 항목을 주기
+  ```python3
+  gender = models.CharField(
+    max_length=5,
+    choices=GenderChoices.choices,
+    default=GenderChoices.MALE,
+  )
+  ```
+- Choices는 내부클래스로 정의한다
+  - `django.db.models.TextChoices`를 inherit한다
+  - 변수명은 `UPPERCASE`로 정하고, 튜플 안에 첫번째 항목은 DB에 저장되는 값으로 `lowercase`를, 두번째 항목은 Client가 보는 항목으로 `TitleCase`로 표기한다
+  ```python3
+  class GenderChoices(models.TextChoices):
+    MALE = ("male", "Male")
+    ...
+  ```
+### 2.3 User Admin 만들기
+- [`UserAdmin`](https://github.com/django/django/blob/main/django/contrib/auth/admin.py#L43-L83) 참고하기
+- `fieldsets`을 설정하여 기존 UserAdmin의 항목을 확장한다

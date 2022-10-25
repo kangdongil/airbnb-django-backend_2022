@@ -118,6 +118,9 @@ class Model([]):
 - 긴 텍스트는 `TextField`를 사용한다
 - 참거짓값은 `BooleanField`, 양의 정수값은 `PositiveIntegerField`를 사용한다
 - 이미지파일은 `ImageField`를 사용하며 파이썬 패키지 `Pillow`를 필요로 한다
+- `DateTimeField`는 날짜시간을 표현한다
+  - `auto_now_add=True`: 처음 생성된 날짜
+  - `auto_now=True`: 마지막으로 업데이트한 날짜
 #### 1.2.2 `Default` / `Blank` / `Null`
 - `Default`는 Client가 값을 입력하지 않았을 때 주는 기본값이며,   
   기존 데이터가 새로운 Field가 추가되었을 때 가지는 값이기도 하다
@@ -167,6 +170,30 @@ fieldsets = (
   ```python3
   {"fields": ("name",),}
   ```
+### 1.4 Abstract Model 사용하기
+1. `Common` App을 Create하기(Optional)
+```bash
+django-admin startapp common
+```
+  - `config.settings`에 `CommonConfig`을 `CUSTOM_APPS`에 추가하기
+2. `TimeStampedModel`을 Create하기
+  - `created`와 `updated`를 `DateTimeField`로 하기
+    - `created`: `auto_now_add`를 `True`하기
+    - `updated`: `auto_now`를 `True`하기
+3. 내부클래스 `class Meta`에 `abstract=True`하기
+```python3
+class TimeStampedModel(models.Model):
+  class Meta:
+    abstract=True
+```
+  - `abstract=True`하면 해당 Model은 DB에 저장되지 않는다
+4. 해당 `Abstract Model`을 `import`하여 사용할 Class에 `inherit`하기
+```python3
+from common.models import TimeStampedModel
+
+class Model(TimeStampedModel):
+  ...
+```
 
 ## 2.0 User App
 - User App을 새로 처음부터 만들기보다 Django에서 제공하는 User App을 확장하는 게 효과적이다

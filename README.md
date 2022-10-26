@@ -249,3 +249,43 @@ class Model(TimeStampedModel):
 ### 2.3 User Admin 만들기
 - [`UserAdmin`](https://github.com/django/django/blob/main/django/contrib/auth/admin.py#L43-L83) 참고하기
 - `fieldsets`을 설정하여 기존 UserAdmin의 항목을 확장한다
+
+### 3.0 Room App & Amenity Model
+- `Room`은 여러 `Relationship`을 가진다.   
+  User `owner`은 `Room`을 소유하며(`ForeignKey`),   
+  `Room`들은 여러 `Amenity`를 가진다(`ManyToManyField`)
+- `__str__`을 수정하여 `Room`이 Admin Panel에 어떻게 표현되는지 수정한다
+- Admin Panel은 단수형 Model 이름에 단순히 `-s`를 붙여 복수형을 표현한다. 따라서 `Amenities`의 경우 복수형을 직접 표현해주어야 한다
+- inherit한 Abstract Model의 Field를 Admin Panel에 드러나게 만들어보자(`read_only`)
+### 3.1 Room App을 Create하기
+- `ForeignKey`는 `연결할 모델`과 `연결된 모델이 삭제되었을 때 대응`을 언급해야 한다
+  - `연결할 모델`은 다음과 같은 방식으로 표시한다
+    - `같은 파일 내 모델`의 경우,
+    ```python3
+    models.ForeignKey("model", on_delete=models.CASCADE)
+    ```
+    - `다른 App의 모델`의 경우,
+    ```python3
+    models.ForeignKey("app.model", on_delete=models.CASCADE)
+    ```
+  - `on_delete`로 연결된 모델이 삭제되었을 때 대응을 정한다
+    - `models.CASCADE`: 함께 삭제된다
+    - `models.SET_NULL`: 내역이 남는다(`Null=True` 함께 사용)
+### 3.2 Amenity App & Admin를 Create하기
+- `ManyToManyField`는 1대多 관계를 표현한다.
+  ```python3
+  models.ManyToManyField("app.model")
+  ```
+- `AdminPanel`에서 복수형 표현을 수정해야 한다면,
+  - `class Meta`로 `verbose_name_plural` 이용하기
+  ```python3
+  class Amenity(Model):
+
+    class Meta:
+      verbose_name_plural = "~"
+  ```
+- `readonly`한 field를 AdminPanel 수정창에 뜨도록 하려면,
+  - `readonly_fields`에 표시한다
+  ```python3
+  readonly_fields = ("~", ...)
+  ```

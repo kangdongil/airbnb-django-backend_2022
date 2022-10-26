@@ -15,7 +15,7 @@ class Room(TimeStampedModel):
     description = models.TextField()
     country = models.CharField(max_length=50, default="South Korea")
     city = models.CharField(max_length=50, default="Seoul")
-    address = models.Charfield(max_length=250)
+    address = models.CharField(max_length=250)
     price = models.PositiveIntegerField()
     rooms = models.PositiveIntegerField()
     toilets = models.PositiveIntegerField()

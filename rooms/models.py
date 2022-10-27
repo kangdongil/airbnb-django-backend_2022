@@ -27,14 +27,22 @@ class Room(TimeStampedModel):
     owner = models.ForeignKey(
         "users.User",
         on_delete=models.CASCADE,
+        related_name="rooms"
     )
-    amenities = models.ManyToManyField("Amenity")
+    amenities = models.ManyToManyField(
+        "Amenity",
+        related_name="rooms",
+    )
     category = models.ForeignKey(
         "categories.Category",
         on_delete=models.SET_NULL,
+        related_name="rooms",
         null=True,
         blank=True,
     )
+
+    def total_amenities(room):
+        return room.amenities.count()
 
     def __str__(self):
         return self.name

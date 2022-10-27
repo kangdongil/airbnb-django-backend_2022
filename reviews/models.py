@@ -1,0 +1,29 @@
+from django.db import models
+from common.models import TimeStampedModel
+
+class Review(TimeStampedModel):
+
+    """ Review Model Definition """
+
+    user = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        related_name="reviews",
+    )
+    room = models.ForeignKey(
+        "rooms.Room",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    experience = models.ForeignKey(
+       "experiences.Experience",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    payload = models.TextField(null=True, blank=True)
+    rating = models.PositiveIntegerField()
+
+    def __str__(review):
+        return f"{review.user} / ★{review.rating}"

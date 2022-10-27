@@ -17,13 +17,18 @@ class Experience(TimeStampedModel):
     host = models.ForeignKey(
         "users.User",
         on_delete=models.SET_NULL,
+        related_name="experiences",
         null=True,
         blank=True,
     )
-    perks = models.ManyToManyField("Perk")
+    perks = models.ManyToManyField(
+        "Perk",
+        related_name="experiences",
+    )
     category = models.ForeignKey(
         "categories.Category",
         on_delete=models.SET_NULL,
+        related_name="experiences",
         null=True,
         blank=True,
     )

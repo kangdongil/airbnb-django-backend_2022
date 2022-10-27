@@ -258,7 +258,7 @@ class Model(TimeStampedModel):
 - `__str__`을 수정하여 `Room`이 Admin Panel에 어떻게 표현되는지 수정한다
 - Admin Panel은 단수형 Model 이름에 단순히 `-s`를 붙여 복수형을 표현한다. 따라서 `Amenities`의 경우 복수형을 직접 표현해주어야 한다
 - inherit한 Abstract Model의 Field를 Admin Panel에 드러나게 만들어보자(`read_only`)
-### 3.1 Room App을 Create하기
+### 3.1 Room Model을 Create하기
 - `ForeignKey`는 `연결할 모델`과 `연결된 모델이 삭제되었을 때 대응`을 언급해야 한다
   - `연결할 모델`은 다음과 같은 방식으로 표시한다
     - `같은 파일 내 모델`의 경우,
@@ -272,7 +272,48 @@ class Model(TimeStampedModel):
   - `on_delete`로 연결된 모델이 삭제되었을 때 대응을 정한다
     - `models.CASCADE`: 함께 삭제된다
     - `models.SET_NULL`: 내역이 남는다(`Null=True` 함께 사용)
-### 3.2 Amenity App & Admin를 Create하기
+### 3.2 Room Admin을 Configure하기
+1. `Reverse Accessor`
+  - `ForeignKey`나 `ManyToManyField`는 역으로 Model을 접근할 수 있는데 이는 기본적으로 `_set`라는 이름 가진다
+  ```python3
+  class User(~):
+    ...
+    rooms = self.room_set.count()
+  ```
+  - 예를 들어, 각 room은 `host`를 가지는데, host는 여러 `rooms`를 가질 수 있다. 이때 이 `room_set`은 User 입장에서 `self.room_set`으로 접근 가능하다
+  - `Reverse Accessor`가 보다 직관적인 이름을 가지도록 하려면 `related_name`으로 항목을 준다
+  ```python3
+  # rooms/models.py
+  class Room(~):
+    ...
+    host = models.ForeignKey(
+      "users.User",
+      on_delete=models.CASCADE,
+      related_name="rooms",
+    )
+  # users/models.py
+  class User(AbstractUser):
+    ...
+    rooms = self.rooms.count()
+  ```
+2. `Model Method`
+  - `Model Class`이나 `Admin Class`는 `Method`를 가질 수 있다
+  - `Method`는 Class 속 `Function`으로 DB에서 처리한 값을 return하는데 사용한다.
+  - Model Method는 `self`를 첫번째 인자로 가진다. `self`는 직관적으로 Model 이름을 가져도 좋다.
+3. `ORM`으로 Room Amenities의 합계 구하기
+  - `ORM`(Object Relational Mapper)로 python 코드로 DB를 CRUD할 수 있다.
+  - `ORM`을 통해 얻은 DB 결과는 `QuerySet` 형태를 띄며, 이를 통해 여러 작업을 할 수 있다. 총합은 `.count`를 사용한다
+  ```python3
+  class Room(~):
+    ...
+    def total_amenities(room):
+      return room.amenities.count()
+  ```
+
+* `ORM` 예시
+  - `.objects.all()`: 해당 model의 모든 Instance를 불러온다
+  - `[QUERYSET].count()`: 해당 QuerySet 안의 Instance 갯수를 return한다.
+### 3.3 Amenity App & Admin를 Create하기
 - `ManyToManyField`는 1대多 관계를 표현한다.
   ```python3
   models.ManyToManyField("app.model")
@@ -295,3 +336,5 @@ class Model(TimeStampedModel):
 - `Room` App과 같은 전개로 만들어가되 숙박 개념이 없는 experience는 당일 `시작시간`과 `종료시간`을 가지도록 한다
 - `Room`의 부속시설인 `Amenity`처럼 `Experience`는 `Perk`을 `ManytoManyField`로 가진다.
 - `Category`는 `Room` 또는 `Experience`의 그룹이다
+
+### 5.0 Review App

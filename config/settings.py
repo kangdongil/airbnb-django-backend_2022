@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-ch4^&1og*8u&irs+4911m^m44!e7em+(%4x@!$qcsovtft&_i&
 DEBUG = True
 
 ALLOWED_HOSTS = ["localhost"]
-CSRF_TRUSTED_ORIGINS = ["https://*.ws-us73.gitpod.io"]
+CSRF_TRUSTED_ORIGINS = ["https://*.ws-us72.gitpod.io"]
 
 
 # Application definition
@@ -44,6 +44,7 @@ CUSTOM_APPS = [
     'common.apps.CommonConfig',
     'rooms.apps.RoomsConfig',
     'experiences.apps.ExperiencesConfig',
+    'categories.apps.CategoriesConfig',
 ]
 THIRD_PARTY_APPS = []
 

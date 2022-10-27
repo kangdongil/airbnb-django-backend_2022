@@ -21,6 +21,12 @@ class Experience(TimeStampedModel):
         blank=True,
     )
     perks = models.ManyToManyField("Perk")
+    category = models.ForeignKey(
+        "categories.Category",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
 
     def __str__(self):
         return self.name

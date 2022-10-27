@@ -171,6 +171,19 @@ fieldsets = (
   ```python3
   {"fields": ("name",),}
   ```
+- `search_fields`: 좌상측에 키워드로 검색하여 항목을 조회할 수 있다
+  - `search_fields = ("[COND1]", "[COND2]")`
+  - `search_help_text`로 검색창 하단에 설명을 넣을 수 있다
+  - `lookups`을 삽입하여 `contains`가 아닌 다른 옵션을 설정할 수 있다
+    - `^`(startswith)
+    - `=`(exact)
+  ```python3
+  search_fields = (
+    "owner__username",
+    "=price",
+  )
+  search_help_text = "~"
+  ```
 - `actions`: 좌상측에 일괄처리 항목을 선택할 수 있다
   - `actions.py`을 만들어 별도로 관리할 수 있다 혹은 `admin` 안에 포함시킬 수 있다
   - `Custom Action` 정의하기

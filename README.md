@@ -171,6 +171,26 @@ fieldsets = (
   ```python3
   {"fields": ("name",),}
   ```
+- `actions`: 좌상측에 일괄처리 항목을 선택할 수 있다
+  - `actions.py`을 만들어 별도로 관리할 수 있다 혹은 `admin` 안에 포함시킬 수 있다
+  - `Custom Action` 정의하기
+    ```python3
+    @admin.action(description="~")
+    def [custom_action](model_admin, request, instances):
+      for instance in instances.all():
+        ...
+        instance.save()
+    ```
+  - `Admin`에 `actions` 포함시키기
+    ```python3
+    from .actions import [custom_action]
+
+    @admin.register(Model)
+    class Admin(admin.ModelAdmin):
+
+      actions = ([custom_action], ...)
+    ```
+
 ### 1.4 Abstract Model 사용하기
 1. `Common` App을 Create하기(Optional)
 ```bash

@@ -292,3 +292,6 @@ class Model(TimeStampedModel):
   ```
 
 ## 4.0 Experience App & Category App
+- `Room` App과 같은 전개로 만들어가되 숙박 개념이 없는 experience는 당일 `시작시간`과 `종료시간`을 가지도록 한다
+- `Room`의 부속시설인 `Amenity`처럼 `Experience`는 `Perk`을 `ManytoManyField`로 가진다.
+- `Category`는 `Room` 또는 `Experience`의 그룹이다

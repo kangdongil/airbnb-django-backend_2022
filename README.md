@@ -119,6 +119,7 @@ class Model([]):
 - 참거짓값은 `BooleanField`, 양의 정수값은 `PositiveIntegerField`를 사용한다
 - 이미지파일은 `ImageField`를 사용하며 파이썬 패키지 `Pillow`를 필요로 한다
 - `DateTimeField`는 날짜시간을 표현한다
+  - 날짜만 `DateField`, 시간만 `TimeField`
   - `auto_now_add=True`: 처음 생성된 날짜
   - `auto_now=True`: 마지막으로 업데이트한 날짜
 #### 1.2.2 `Default` / `Blank` / `Null`
@@ -289,3 +290,5 @@ class Model(TimeStampedModel):
   ```python3
   readonly_fields = ("~", ...)
   ```
+
+## 4.0 Experience App & Category App

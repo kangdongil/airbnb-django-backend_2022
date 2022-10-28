@@ -284,14 +284,15 @@ class Model(TimeStampedModel):
 - [`UserAdmin`](https://github.com/django/django/blob/main/django/contrib/auth/admin.py#L43-L83) 참고하기
 - `fieldsets`을 설정하여 기존 UserAdmin의 항목을 확장한다
 
-### 3.0 Room App & Amenity Model
+## 3.0 Project에 필요한 App 만들기
+### 3.1 Room App & Amenity Model
 - `Room`은 여러 `Relationship`을 가진다.   
   User `owner`은 `Room`을 소유하며(`ForeignKey`),   
   `Room`들은 여러 `Amenity`를 가진다(`ManyToManyField`)
 - `__str__`을 수정하여 `Room`이 Admin Panel에 어떻게 표현되는지 수정한다
 - Admin Panel은 단수형 Model 이름에 단순히 `-s`를 붙여 복수형을 표현한다. 따라서 `Amenities`의 경우 복수형을 직접 표현해주어야 한다
 - inherit한 Abstract Model의 Field를 Admin Panel에 드러나게 만들어보자(`read_only`)
-### 3.1 Room Model을 Create하기
+### 3.1.1 Room Model을 Create하기
 - `ForeignKey`는 `연결할 모델`과 `연결된 모델이 삭제되었을 때 대응`을 언급해야 한다
   - `연결할 모델`은 다음과 같은 방식으로 표시한다
     - `같은 파일 내 모델`의 경우,
@@ -305,7 +306,7 @@ class Model(TimeStampedModel):
   - `on_delete`로 연결된 모델이 삭제되었을 때 대응을 정한다
     - `models.CASCADE`: 함께 삭제된다
     - `models.SET_NULL`: 내역이 남는다(`Null=True` 함께 사용)
-### 3.2 Room Admin을 Configure하기
+### 3.1.2 Room Admin을 Configure하기
 1. `Reverse Accessor`
   - `ForeignKey`나 `ManyToManyField`는 역으로 Model을 접근할 수 있는데 이는 기본적으로 `_set`라는 이름 가진다
   ```python3
@@ -346,7 +347,7 @@ class Model(TimeStampedModel):
 * `ORM` 예시
   - `.objects.all()`: 해당 model의 모든 Instance를 불러온다
   - `[QUERYSET].count()`: 해당 QuerySet 안의 Instance 갯수를 return한다.
-### 3.3 Amenity App & Admin를 Create하기
+### 3.1.3 Amenity App & Admin를 Create하기
 - `ManyToManyField`는 1대多 관계를 표현한다.
   ```python3
   models.ManyToManyField("app.model")
@@ -365,12 +366,12 @@ class Model(TimeStampedModel):
   readonly_fields = ("~", ...)
   ```
 
-## 4.0 Experience App & Category App
+### 3.2 Experience App & Category App
 - `Room` App과 같은 전개로 만들어가되 숙박 개념이 없는 experience는 당일 `시작시간`과 `종료시간`을 가지도록 한다
 - `Room`의 부속시설인 `Amenity`처럼 `Experience`는 `Perk`을 `ManytoManyField`로 가진다.
 - `Category`는 `Room` 또는 `Experience`의 그룹이다
 
-## 5.0 Review App
+### 3.3 Review App
 - `__str__` 메서드가 return할 값을 customize할 수 있다. `f"" String`을 활용해 변수들을 `{~}`에 넣어 표현 가능하다.
   ```python3
   def __str__(self):
@@ -419,3 +420,21 @@ class Model(TimeStampedModel):
   - `queryset` Function은 param에 따라 제시할 queryset을 filter하여 제시한다.
     - `.get`은 param이 있을 때 `match` Dictionary를 참고하지만, 없다면 전체 queryset을 돌려준다
 - `Custom Filter`를 `admin.py`에 `import`하고 `list_display`에 추가한다
+
+## 4.0 Django Url & Django View
+
+
+## 5.0 Django REST Framework로 API 만들기
+### 5.1 DRF 설치하기
+1. `Poetry`로 `DRF` 설치하기
+  ```shell
+  poetry add djangorestframework
+  ```
+2. `config.settings`에서 `THIRD_PARTY_APPS`에 DRF를 등록하기
+  ```python3
+  THIRD_PARTY_APPS = ["rest_framework",]
+  ```
+3. DRF를 사용할 `views.py`에 `import`하기
+  ```python3
+  import rest_framework
+  ```

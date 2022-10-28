@@ -371,3 +371,18 @@ class Model(TimeStampedModel):
 - `Category`는 `Room` 또는 `Experience`의 그룹이다
 
 ### 5.0 Review App
+- `__str__` 메서드가 return할 값을 customize할 수 있다. `f"" String`을 활용해 변수들을 `{~}`에 넣어 표현 가능하다.
+  ```python3
+  def __str__(self):
+    return f"{self.user} / {self.rating}"
+  ```
+- Room Reviews들의 평균(Average)을 구하는 Class Method을 만든다
+  - `산술평균`: $\frac{(Review Ratings의 총합)}{(Reviews 갯수)}$
+  - 해당 Room의 `Review` 갯수 구하기
+    - `self.reviews.count()`
+  - `Review` 갯수가 `0`일 때 예외처리하기
+  - Review Ratings의 총합 구하기
+    - 모든 reviews에서 rating만 가져오기
+    - `self.reviews.all().values("rating")`
+    - `for문` 돌려서 rating값 누적합하기
+  - `return`할 때 소수점 아래 두자리 반올림하기(`round`)

@@ -44,6 +44,16 @@ class Room(TimeStampedModel):
     def total_amenities(room):
         return room.amenities.count()
 
+    def average_ratings(room):
+        reviews = room.reviews.count()
+        if reviews == 0:
+            return 0
+        else:
+            total_ratings = 0
+            for review in room.reviews.all().values("rating"):
+                total_ratings += review["rating"]
+            return round(total_ratings / reviews, 2)
+
     def __str__(self):
         return self.name
 

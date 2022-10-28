@@ -15,15 +15,18 @@ class Review(TimeStampedModel):
         on_delete=models.CASCADE,
         null=True,
         blank=True,
+        related_name="reviews",
     )
     experience = models.ForeignKey(
        "experiences.Experience",
         on_delete=models.CASCADE,
         null=True,
         blank=True,
+        related_name="reviews",
     )
     payload = models.TextField(null=True, blank=True)
     rating = models.PositiveIntegerField()
+
 
     def __str__(review):
         return f"{review.user} / ★{review.rating}"

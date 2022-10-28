@@ -370,4 +370,52 @@ class Model(TimeStampedModel):
 - `Room`의 부속시설인 `Amenity`처럼 `Experience`는 `Perk`을 `ManytoManyField`로 가진다.
 - `Category`는 `Room` 또는 `Experience`의 그룹이다
 
-### 5.0 Review App
+## 5.0 Review App
+- `__str__` 메서드가 return할 값을 customize할 수 있다. `f"" String`을 활용해 변수들을 `{~}`에 넣어 표현 가능하다.
+  ```python3
+  def __str__(self):
+    return f"{self.user} / {self.rating}"
+  ```
+- Room Reviews들의 평균(Average)을 구하는 Class Method을 만든다
+  - `산술평균`: $\frac{(Review Ratings의 총합)}{(Reviews 갯수)}$
+  - 해당 Room의 `Review` 갯수 구하기
+    - `self.reviews.count()`
+  - `Review` 갯수가 `0`일 때 예외처리하기
+  - Review Ratings의 총합 구하기
+    - 모든 reviews에서 rating만 가져오기
+    - `self.reviews.all().values("rating")`
+    - `for문` 돌려서 rating값 누적합하기
+  - `return`할 때 소수점 아래 두자리 반올림하기(`round`)
+- `list_filter`는 단순히 해당 Model의 Field만 가능한게 아니라 `__`로 다른 ForeignKey로 접근한 다른 Model의 Field도 기준으로 삼을 수 있다.
+  ```python3
+  list_filter = (
+    "user__is_host",
+    "room__category",
+  )
+  ```
+- `Custom Filter`를 만들어 이를 `list_filter`에 기재할 수 있다.
+  - `django.contrib.admin.SimpleListFilter`를 import하기
+  - `admin.py`에 inline으로 작성해도 좋고 `filter.py`를 별도로 만들어 관리할 수 있다.
+  ```python3
+  class CustomFilter(SimpleListFilter):
+    title = "~"
+    parameter_name = "~"
+
+    def lookups(self, request, model_admin):
+      return [("PARAM_VALUE", "CLIENT_NAME"), ...]
+    
+    def queryset(self, request, queryset):
+      param = self.value()
+      match = {
+        "PARAM_VALUE": queryset.filter(~),
+        ...
+      }
+      return match.get(param, queryset)
+  ```
+  - `title` / `parameter_name` 값을 입력한다
+    - `title`은 Admin Panel 우측 Filter칸에 Filter 이름을 말한다
+    - `parameter_name`은 URL에서 parameter 이름을 무엇으로 할지 정한다
+  - `lookups` Function은 Client에게 Filter에 어떻게 보일지 정하는 것이다.
+  - `queryset` Function은 param에 따라 제시할 queryset을 filter하여 제시한다.
+    - `.get`은 param이 있을 때 `match` Dictionary를 참고하지만, 없다면 전체 queryset을 돌려준다
+- `Custom Filter`를 `admin.py`에 `import`하고 `list_display`에 추가한다

@@ -13,6 +13,7 @@ class RoomAdmin(admin.ModelAdmin):
         "kind",
         "owner",
         "total_amenities",
+        "average_ratings",
     )
 
     list_filter = (

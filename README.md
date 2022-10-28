@@ -470,6 +470,29 @@ class Model(TimeStampedModel):
   ```python3
   path("<int:pk>", views.RoomDetail.as_view())
   ```
+### 4.2 Django View
+- 모든 `View` function은 첫번째 인자로 `request`를 가진다
+- `URL`에 `변수`를 주면 View Function은 인자를 받을 수 있다
+  ```python3
+  # urls.py
+  path("<int:pk>", views.~)
+  # views.py
+  def room(request, pk):
+    ...
+  ```
+- `Json`을 return하는 `View`를 만드려면 다음 사항이 필요하다
+  ```python3
+  from django.http import HttpResponse
+  from django.core import serializers
+
+  def rooms(request):
+    queryset = Room.objects.all()
+    data = serializers.serialize("json", queryset)
+    return HttpResponse(content=data)
+  ```
+  1. `QuerySet`을 가져온다
+  2. `Serializer`로 `QuerySet`을 `Json`으로 변환한다
+  3. `Json`화된 data를 `Response`로 `return`한다
 
 ## 5.0 Django REST Framework로 API 만들기
 ### 5.1 DRF 설치하기
@@ -484,4 +507,3 @@ class Model(TimeStampedModel):
 3. DRF를 사용할 `views.py`에 `import`하기
   ```python3
   import rest_framework
-  ```

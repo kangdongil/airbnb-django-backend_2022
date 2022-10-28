@@ -507,3 +507,36 @@ class Model(TimeStampedModel):
 3. DRF를 사용할 `views.py`에 `import`하기
   ```python3
   import rest_framework
+
+### 5.2 DRF로 Function-based View(FBV) 만들기
+1. `DRF Response`
+  - `rest_framework.response.Response`로 import하기
+  ```python3
+  def view(request):
+    ...
+    return Response([JSON])
+  ```
+2. `DRF Serializer`
+  - `rest_framework.serializers.Serializer`를 import하기
+  - `serializers.py`를 만들어 관리하기
+  - serialize할 `model`를 import하고 json에 포함할 `field`를 맞대응하여 추가한다
+    - `serializers.ModelField(~)`식으로 추가한다
+3. `@api_view`
+  - `rest_framework.decorators.api_view`
+  - `view` 바로 위에 `@api_view()`를 설정한다
+  - `get`이 default고 다른 `HTTP_METHOD`를 허용하고 싶다면   
+    List(`[]`)에 넣는다
+  ```python3
+  @api_view(["GET", "POST"])
+  class View(~):
+  ```
+  - HTTP_METHOD는 if문을 `request_method`로 처리한다.
+  ```python3
+  if request.method == "GET":
+    ...
+  elif request.method == "POST":
+    ...
+  ```
+### 5.3 HTTP METHOD별 FBV 만들기
+
+### 5.4 DRF APIView

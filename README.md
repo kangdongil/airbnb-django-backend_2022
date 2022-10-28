@@ -422,7 +422,54 @@ class Model(TimeStampedModel):
 - `Custom Filter`를 `admin.py`에 `import`하고 `list_display`에 추가한다
 
 ## 4.0 Django Url & Django View
-
+### 4.0.1 Django가 웹을 구현하는 과정
+- Django가 BackEnd에서 FrontEnd로 Data를 구현할 때,   
+  다음 3단계를 거친다   
+  `Model` + `Url` - `View` - `Template`
+  - `Model`은 DB에 담긴 data에 대한 정의를 말한다
+  - `Url`은 Client가 접속하는 Url을 정의하고 처리하는 함수를 연결해준다
+  - `View`는 Url을 접속할 때 Response를 처리하는 함수이다
+  - `Template`은 Response한 응답한 HTML이다
+- 이번 프로젝트에서는 `Django Template`을 사용하지 않고 `React`로 FrontEnd를 구현할 것이다
+- 따라서, `Template` 대신 data를 json으로 구현할 `API`로 Response 하겠다
+### 4.1 Django Url
+- `config/urls.py`
+  1. `django.urls`에서 `path`와 `include`를 `import`하기
+  ```python3
+  from django.urls import path, include
+  ```
+  2. `urlpatterns`라는 `list`(`[]`)를 만들어 `path`들을 관리한다.
+  ```python3
+  urlpatterns = [
+    path(~),
+  ]
+  ```
+  3. 각 app폴더마다 `url`을 따로 관리하는 경우에는,   
+  `path`에 `url`과 `[apps].urls` 경로가 포함된 `include`를 넣는다.
+  ```python3
+  path("rooms/", include("rooms.urls"))
+  ```
+- `[apps]/urls.py`
+  1. `django.urls.path`와 `views.py` 내 모든 view들을 `import`한다
+  ```python3
+  from django.urls import path
+  from . import views
+  ```
+  2. `urlpatterns`을 만들고 `path`에 `include` 이후 이어지는 `url`과 `view`를 적는다
+  ```python3
+  urlpatterns = [
+    path("", views.rooms),
+    ...
+  ]
+  ```
+  3. `FBV`(Function-based View)가 아닌 `CBV`(Class-based View)를 채택한다면 `.as_view()`를 덧붙인다
+  ```python3
+  path("", views.Room.as_view())
+  ```
+  4. Url에 변수를 주려면 `<[DATATYPE]:[PARAM_NAME]>`로 표현한다.
+  ```python3
+  path("<int:pk>", views.RoomDetail.as_view())
+  ```
 
 ## 5.0 Django REST Framework로 API 만들기
 ### 5.1 DRF 설치하기

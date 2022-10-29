@@ -284,14 +284,15 @@ class Model(TimeStampedModel):
 - [`UserAdmin`](https://github.com/django/django/blob/main/django/contrib/auth/admin.py#L43-L83) 참고하기
 - `fieldsets`을 설정하여 기존 UserAdmin의 항목을 확장한다
 
-### 3.0 Room App & Amenity Model
+## 3.0 Project에 필요한 App 만들기
+### 3.1 Room App & Amenity Model
 - `Room`은 여러 `Relationship`을 가진다.   
   User `owner`은 `Room`을 소유하며(`ForeignKey`),   
   `Room`들은 여러 `Amenity`를 가진다(`ManyToManyField`)
 - `__str__`을 수정하여 `Room`이 Admin Panel에 어떻게 표현되는지 수정한다
 - Admin Panel은 단수형 Model 이름에 단순히 `-s`를 붙여 복수형을 표현한다. 따라서 `Amenities`의 경우 복수형을 직접 표현해주어야 한다
 - inherit한 Abstract Model의 Field를 Admin Panel에 드러나게 만들어보자(`read_only`)
-### 3.1 Room Model을 Create하기
+### 3.1.1 Room Model을 Create하기
 - `ForeignKey`는 `연결할 모델`과 `연결된 모델이 삭제되었을 때 대응`을 언급해야 한다
   - `연결할 모델`은 다음과 같은 방식으로 표시한다
     - `같은 파일 내 모델`의 경우,
@@ -305,7 +306,7 @@ class Model(TimeStampedModel):
   - `on_delete`로 연결된 모델이 삭제되었을 때 대응을 정한다
     - `models.CASCADE`: 함께 삭제된다
     - `models.SET_NULL`: 내역이 남는다(`Null=True` 함께 사용)
-### 3.2 Room Admin을 Configure하기
+### 3.1.2 Room Admin을 Configure하기
 1. `Reverse Accessor`
   - `ForeignKey`나 `ManyToManyField`는 역으로 Model을 접근할 수 있는데 이는 기본적으로 `_set`라는 이름 가진다
   ```python3
@@ -346,7 +347,7 @@ class Model(TimeStampedModel):
 * `ORM` 예시
   - `.objects.all()`: 해당 model의 모든 Instance를 불러온다
   - `[QUERYSET].count()`: 해당 QuerySet 안의 Instance 갯수를 return한다.
-### 3.3 Amenity App & Admin를 Create하기
+### 3.1.3 Amenity App & Admin를 Create하기
 - `ManyToManyField`는 1대多 관계를 표현한다.
   ```python3
   models.ManyToManyField("app.model")
@@ -365,12 +366,12 @@ class Model(TimeStampedModel):
   readonly_fields = ("~", ...)
   ```
 
-## 4.0 Experience App & Category App
+### 3.2 Experience App & Category App
 - `Room` App과 같은 전개로 만들어가되 숙박 개념이 없는 experience는 당일 `시작시간`과 `종료시간`을 가지도록 한다
 - `Room`의 부속시설인 `Amenity`처럼 `Experience`는 `Perk`을 `ManytoManyField`로 가진다.
 - `Category`는 `Room` 또는 `Experience`의 그룹이다
 
-## 5.0 Review App
+### 3.3 Review App
 - `__str__` 메서드가 return할 값을 customize할 수 있다. `f"" String`을 활용해 변수들을 `{~}`에 넣어 표현 가능하다.
   ```python3
   def __str__(self):
@@ -419,3 +420,255 @@ class Model(TimeStampedModel):
   - `queryset` Function은 param에 따라 제시할 queryset을 filter하여 제시한다.
     - `.get`은 param이 있을 때 `match` Dictionary를 참고하지만, 없다면 전체 queryset을 돌려준다
 - `Custom Filter`를 `admin.py`에 `import`하고 `list_display`에 추가한다
+
+## 4.0 Django Url & Django View
+### 4.0.1 Django가 웹을 구현하는 과정
+- Django가 BackEnd에서 FrontEnd로 Data를 구현할 때,   
+  다음 3단계를 거친다   
+  `Model` + `Url` - `View` - `Template`
+  - `Model`은 DB에 담긴 data에 대한 정의를 말한다
+  - `Url`은 Client가 접속하는 Url을 정의하고 처리하는 함수를 연결해준다
+  - `View`는 Url을 접속할 때 Response를 처리하는 함수이다
+  - `Template`은 Response한 응답한 HTML이다
+- 이번 프로젝트에서는 `Django Template`을 사용하지 않고 `React`로 FrontEnd를 구현할 것이다
+- 따라서, `Template` 대신 data를 json으로 구현할 `API`로 Response 하겠다
+### 4.1 Django Url
+- `config/urls.py`
+  1. `django.urls`에서 `path`와 `include`를 `import`하기
+  ```python3
+  from django.urls import path, include
+  ```
+  2. `urlpatterns`라는 `list`(`[]`)를 만들어 `path`들을 관리한다.
+  ```python3
+  urlpatterns = [
+    path(~),
+  ]
+  ```
+  3. 각 app폴더마다 `url`을 따로 관리하는 경우에는,   
+  `path`에 `url`과 `[apps].urls` 경로가 포함된 `include`를 넣는다.
+  ```python3
+  path("rooms/", include("rooms.urls"))
+  ```
+- `[apps]/urls.py`
+  1. `django.urls.path`와 `views.py` 내 모든 view들을 `import`한다
+  ```python3
+  from django.urls import path
+  from . import views
+  ```
+  2. `urlpatterns`을 만들고 `path`에 `include` 이후 이어지는 `url`과 `view`를 적는다
+  ```python3
+  urlpatterns = [
+    path("", views.rooms),
+    ...
+  ]
+  ```
+  3. `FBV`(Function-based View)가 아닌 `CBV`(Class-based View)를 채택한다면 `.as_view()`를 덧붙인다
+  ```python3
+  path("", views.Room.as_view())
+  ```
+  4. Url에 변수를 주려면 `<[DATATYPE]:[PARAM_NAME]>`로 표현한다.
+  ```python3
+  path("<int:pk>", views.RoomDetail.as_view())
+  ```
+### 4.2 Django View
+- 모든 `View` function은 첫번째 인자로 `request`를 가진다
+- `URL`에 `변수`를 주면 View Function은 인자를 받을 수 있다
+  ```python3
+  # urls.py
+  path("<int:pk>", views.~)
+  # views.py
+  def room(request, pk):
+    ...
+  ```
+- `Json`을 return하는 `View`를 만드려면 다음 사항이 필요하다
+  ```python3
+  from django.http import HttpResponse
+  from django.core import serializers
+
+  def rooms(request):
+    queryset = Room.objects.all()
+    data = serializers.serialize("json", queryset)
+    return HttpResponse(content=data)
+  ```
+  1. `QuerySet`을 가져온다
+  2. `Serializer`로 `QuerySet`을 `Json`으로 변환한다
+  3. `Json`화된 data를 `Response`로 `return`한다
+
+## 5.0 Django REST Framework로 API 만들기
+### 5.1 DRF 설치하기
+1. `Poetry`로 `DRF` 설치하기
+  ```shell
+  poetry add djangorestframework
+  ```
+2. `config.settings`에서 `THIRD_PARTY_APPS`에 DRF를 등록하기
+  ```python3
+  THIRD_PARTY_APPS = ["rest_framework",]
+  ```
+3. DRF를 사용할 `views.py`에 `import`하기
+  ```python3
+  import rest_framework
+
+### 5.2 DRF로 Function-based View(FBV) 만들기
+1. `DRF Response`
+  - `rest_framework.response.Response`로 import하기
+  ```python3
+  def view(request):
+    ...
+    return Response([JSON])
+  ```
+2. `DRF Serializer`
+  - `rest_framework.serializers.Serializer`를 import하기
+  - `serializers.py`를 만들어 관리하기
+  - serialize할 `model`를 import하고 json에 포함할 `field`를 맞대응하여 추가한다
+    - `serializers.ModelField(~)`식으로 추가한다
+3. `@api_view`
+  - `rest_framework.decorators.api_view`
+  - `view` 바로 위에 `@api_view()`를 설정한다
+  - `get`이 default고 다른 `HTTP_METHOD`를 허용하고 싶다면   
+    List(`[]`)에 넣는다
+  ```python3
+  @api_view(["GET", "POST"])
+  class View(~):
+  ```
+  - HTTP_METHOD는 if문을 `request_method`로 처리한다.
+  ```python3
+  if request.method == "GET":
+    ...
+  elif request.method == "POST":
+    ...
+  ```
+### 5.2.1 DRF Serializer로 HTTP METHOD 처리하기
+1. GET
+  - `LIST형`이냐 `DETAIL형`이냐를 구분한다
+  - LIST형
+    ```python3
+    queryset = Model.objects.all()
+    serializer = Serializer(queryset, many=True)
+    return Response(serializer.data)
+    ```
+    - queryset을 받아 serializer 처리해준뒤, `.data`하여 `Response`한다
+    - queryset에 data가 여러개일 경우, `many=True`한다
+  - DETAIL형
+    ```python3
+    from rest_framework.exceptions import NotFound
+  
+    try:
+      queryset = Model.objects.get(pk=pk)
+    except Model.DoesNotExist:
+      return NotFound
+    ...
+    serializer = Serializer(queryset)
+    return Response(serializer.data)
+    ```
+    - 해당 pk인 Instance가 존재하는지 확인한다.
+2. POST
+  ```python3
+  # views.py
+  serializer = Serializer(data=request.data)
+  if serializer.is_valid():
+    new_data = serializer.save()
+    serializer = Serializer(new_data)
+    return Response(serializer.data)
+  else:
+    return Response(serializer.errors)
+  ```
+  - `POST`는 client의 form data를 받아 server에서 처리하는 것이므로 `request`의 data를 `data=request.data`식으로 받는다
+  - `client`가 입력한 data를 검증(`.is_valid()`)하고 검증이 성공하면 계속 진행하며, 문제가 있을 경우 `serializer.errors`를 return한다
+  - 해당 data가 valid하다면 `serializer.save()`를 진행한다. POST에서 `save`는 `create`메서드에서 진행된다
+  - 다시 한번 `serializer`를 진행하고 이를 `Response`해준다
+  ```python3
+  # serializer.py
+  def create(self, validated_data):
+    return Category.objects.create(
+      **validated_data
+    )
+  ```
+  - `.objects.create(~)`로 data를 DB에 생성한다
+  - `valid`된 data를 `**`를 앞에 붙여 자동으로 처리하게 한다
+3. PUT
+  ```python3
+  try:
+    queryset = Model.objects.get(pk=pk)
+  except Model.DoesNotExist:
+    return NotFound
+  ...
+  serializer = Serializer(
+    queryset,
+    data=request.data,
+    partial=True,
+  )
+  if serializer.is_valid():
+    updated_data = serializer.save()
+    serializer = Serializer(updated_data)
+    return Response(serializer.data)
+  else:
+    return Response(serializer.errors)
+  ```
+  - `PUT`은 `GET`한 data를 client가 `POST`한 data로 변경하는 것이므로 `queryset`과 `request.data` 모두 필요하다
+  - `partial=True`함으로써 일부 field만 입력해도 수정가능하게 한다
+  - 이후 data검증(`.is_valid`)하고 `POST`와 같이 검증이 성공하면 `save`한 뒤 `Response`한다
+  - PUT에서 `save`는 `update` 메서드에서 진행된다
+  ```python3
+  def update(self, instance, validated_data):
+    instance.field1 = validated_data.get("field1_name", instance.field1)
+    instance.field2 = validated_data.get("field2_name", instance.field2)
+    ...
+    instance.save()
+    return instance
+  ```
+  - `instance`는 DB에 가져온 수정할 data이고   
+    `validated_data`는 client가 입력할 수정될 data다
+  - `instance`를 이루는 모든 `field`를 설명하고 이를 `.get`하여 수정할 data가 있으면 대체하고 아니면 기존 data로 둔다
+  - 마지막으로 `instance`를 `save`하고 `return`한다
+4. DELETE
+  ```python3
+  try:
+    queryset = Model.objects.get(pk=pk)
+  except Model.DoesNotExist:
+    return NotFound
+  ...
+  from rest_framework.status import HTTP_204_NO_CONTENT
+
+  queryset.delete()
+  return Response(status=HTTP_204_NO_CONTENT)
+  ```
+  - 실제 DB에서 queryset을 삭제하는 과정 `.delete()`이다
+  - 삭제로 인해 GET할 data가 없음을 보여주기 위해 `204 Error`를 `Response`한다.
+### 5.3 DRF APIView
+- FBV 대신 CBV를 사용했을 때 장점은 다음과 같다.
+  - `if..elif문` 대신 `Class Method`로 `HTTP_METHOD`를 관리하여 가독성이 높다
+  - `pk`인 `queryset`을 얻는 과정을 별도의 `Class Method`로 관리하면 코드가 간결해진다
+- CBV를 작성하는 방법은 다음과 같다.
+  1. `urls.py`에서 `class`를 view로 사용하려면 `.as_view()`을 추가해줘야 한다
+    ```python3
+    path("", views.RoomList.as_view()),
+    ```
+  2. `rest_framework.views.APIView`를 `import`하고 `inherit`한다
+    ```python3
+    from rest_framework.views import APIView
+
+    class RoomList(APIView):
+      ...
+    ```
+  3. HTTP Method 메서드의 인자는 `self`, `request` 그리고 url을 통해 받은 `변수`이다
+    ```python3
+    class RoomDetail(APIView):
+      def get(self, request, pk):
+        ...
+    ```
+### 5.4 DRF ModelSerializer
+- 일반 Serializer가 Model Field를 일일히 대응시켜야 한다는 불편함이 있기 때문에 이를 해결해주는 게 `ModelSerializer`이다.
+- `rest_framework.serializers.ModelSerializer`를 `import`한다
+- `class Meta`를 열고 `model`과 `fields`를 설명한다
+  ```python3
+  from rest_framework import serializer
+  from .models import Model
+
+
+  class Serializer(ModelSerializer):
+    class Meta:
+      model = Model
+      fields = "__all__"
+  ```
+  - fields는 json에 넣은 field를 튜플에 추가한다. 모든 field를 보여주려면 `"__all__"`으로 표현한다.
+  - 반대로 제외할 field가 있다면 `exclude`를 한다

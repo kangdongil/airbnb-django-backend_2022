@@ -10,6 +10,7 @@ packages = [{include = "airbnb_221024"}]
 python = "^3.8"
 Django = "^4.1.2"
 Pillow = "^9.2.0"
+djangorestframework = "^3.14.0"
 
 
 [build-system]

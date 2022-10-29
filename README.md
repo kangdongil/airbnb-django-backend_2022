@@ -686,3 +686,12 @@ class Model(TimeStampedModel):
       fields = "__all__"
   ```
   - `ManytoManyField`의 경우, Serializer에 `many=True`를 언급해야 모든 개체를 포함한다
+### 5.5 상황별 Serializer 만들기
+1. Data 구조가 단순하고 수량이 적다면 App `Serializer` 하나면 충분하다
+2. Data 개수가 많다면 `List`형과 `Detail`형을 나누어 관리한다
+  - `List`형은 말그대로 목록에 드러나는 경우로 일부 정보만 드러낸다
+  - `Detail`형은 특정 한 경우를 자세히 설명하는 것으로 거의 모든 정보를 드러낸다
+3. `User`처럼 본인에게만 허용되는 정보가 포함된다면 `Private`, `Public`으로 나눠서 관리하며 필요할 경우 추가로 만든다
+  - `Private`
+  - `Public`
+  - `User`의 경우, `TinyUserSerializer`를 만들어 `avatar`와 `name`만 드러낼 수 있다

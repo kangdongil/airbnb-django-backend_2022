@@ -66,6 +66,7 @@ class RoomList(APIView):
         serializer = serializers.RoomListSerializer(
             all_rooms,
             many=True,
+            context={"request": request},
         )
         return Response(serializer.data)
     
@@ -112,7 +113,10 @@ class RoomDetail(APIView):
     
     def get(self, request, pk):
         room = self.get_object(pk)
-        serializer = serializers.RoomDetailSerializer(room)
+        serializer = serializers.RoomDetailSerializer(
+            room,
+            context={"request": request},
+        )
         return Response(serializer.data)
     
     def put(self, request, pk):
@@ -152,7 +156,10 @@ class RoomDetail(APIView):
             except Exception as e:
                 raise ParseError(e)
             
-            serializer = serializers.RoomDetailSerializer(updated_room)
+            serializer = serializers.RoomDetailSerializer(
+                updated_room,
+                context={"request": request},
+            )
             return Response(serializer.data)
 
     def delete(self, request, pk):

@@ -852,6 +852,42 @@ class Model(TimeStampedModel):
   ```
   - `ManytoManyField`의 경우, Serializer에 `many=True`를 언급해야 모든 개체를 포함한다
 - `ForeignKey`를 `POST`나 `PUT`할 경우, `read_only=True`로 처리하고 View 로직으로 직접 처리한다
+### 5.4.2 `SerializerMethodField`로 `Method` data를 json에 넣기
+1. `rest_framework.serializers.SerializerMethodField`를 import하기
+2. `Serializer Class`에 `SerializerMethodField` 정의하기
+  ```python3
+  class Serializer(ModelSerializer):
+    rating = SerializerMethodField()
+  ```
+3. 해당 `SerializerMethodField`를 `get_` method로 처리하기
+  ```python3
+  def get_[method](self, instance):
+    return model.model_method()
+  ```
+4. 해당 `SerializerMethodField`를 `list_display`에 표현하기
+  ```python3
+  class Meta:
+    fields = (
+      ...
+      "method",
+    )
+  ```
+### 5.4.3 `Serializer Context`로 `request` data를 `serializer`에 가져오기
+1. `view` 안에 Serializer에 `context` 항목을 추가하기
+  ```python3
+  Serializer(
+    queryset,
+    context={"request": request},
+  )
+  ```
+2. `SerializerMethodField`를 정의하고 `self.context`에서 `request`를 가져오기
+  ```python3
+  is_owner = SerializerMethodField()
+
+  def get_is_owner(self, room):
+    request = self.context["request"]
+    return room.owner == request.user
+  ```
 ### 5.5 상황별 Serializers 구상하기
 1. Data 구조가 단순하고 수량이 적다면 App `Serializer` 하나면 충분하다
 2. Data 개수가 많다면 `List`형과 `Detail`형을 나누어 관리한다

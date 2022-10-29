@@ -537,6 +537,123 @@ class Model(TimeStampedModel):
   elif request.method == "POST":
     ...
   ```
-### 5.3 HTTP METHOD별 FBV 만들기
+### 5.2.1 DRF Serializer로 HTTP METHOD 처리하기
+1. GET
+  - `LIST형`이냐 `DETAIL형`이냐를 구분한다
+  - LIST형
+    ```python3
+    queryset = Model.objects.all()
+    serializer = Serializer(queryset, many=True)
+    return Response(serializer.data)
+    ```
+    - queryset을 받아 serializer 처리해준뒤, `.data`하여 `Response`한다
+    - queryset에 data가 여러개일 경우, `many=True`한다
+  - DETAIL형
+    ```python3
+    from rest_framework.exceptions import NotFound
+  
+    try:
+      queryset = Model.objects.get(pk=pk)
+    except Model.DoesNotExist:
+      return NotFound
+    ...
+    serializer = Serializer(queryset)
+    return Response(serializer.data)
+    ```
+    - 해당 pk인 Instance가 존재하는지 확인한다.
+2. POST
+  ```python3
+  # views.py
+  serializer = Serializer(data=request.data)
+  if serializer.is_valid():
+    new_data = serializer.save()
+    serializer = Serializer(new_data)
+    return Response(serializer.data)
+  else:
+    return Response(serializer.errors)
+  ```
+  - `POST`는 client의 form data를 받아 server에서 처리하는 것이므로 `request`의 data를 `data=request.data`식으로 받는다
+  - `client`가 입력한 data를 검증(`.is_valid()`)하고 검증이 성공하면 계속 진행하며, 문제가 있을 경우 `serializer.errors`를 return한다
+  - 해당 data가 valid하다면 `serializer.save()`를 진행한다. POST에서 `save`는 `create`메서드에서 진행된다
+  - 다시 한번 `serializer`를 진행하고 이를 `Response`해준다
+  ```python3
+  # serializer.py
+  def create(self, validated_data):
+    return Category.objects.create(
+      **validated_data
+    )
+  ```
+  - `.objects.create(~)`로 data를 DB에 생성한다
+  - `valid`된 data를 `**`를 앞에 붙여 자동으로 처리하게 한다
+3. PUT
+  ```python3
+  try:
+    queryset = Model.objects.get(pk=pk)
+  except Model.DoesNotExist:
+    return NotFound
+  ...
+  serializer = Serializer(
+    queryset,
+    data=request.data,
+    partial=True,
+  )
+  if serializer.is_valid():
+    updated_data = serializer.save()
+    serializer = Serializer(updated_data)
+    return Response(serializer.data)
+  else:
+    return Response(serializer.errors)
+  ```
+  - `PUT`은 `GET`한 data를 client가 `POST`한 data로 변경하는 것이므로 `queryset`과 `request.data` 모두 필요하다
+  - `partial=True`함으로써 일부 field만 입력해도 수정가능하게 한다
+  - 이후 data검증(`.is_valid`)하고 `POST`와 같이 검증이 성공하면 `save`한 뒤 `Response`한다
+  - PUT에서 `save`는 `update` 메서드에서 진행된다
+  ```python3
+  def update(self, instance, validated_data):
+    instance.field1 = validated_data.get("field1_name", instance.field1)
+    instance.field2 = validated_data.get("field2_name", instance.field2)
+    ...
+    instance.save()
+    return instance
+  ```
+  - `instance`는 DB에 가져온 수정할 data이고   
+    `validated_data`는 client가 입력할 수정될 data다
+  - `instance`를 이루는 모든 `field`를 설명하고 이를 `.get`하여 수정할 data가 있으면 대체하고 아니면 기존 data로 둔다
+  - 마지막으로 `instance`를 `save`하고 `return`한다
+4. DELETE
+  ```python3
+  try:
+    queryset = Model.objects.get(pk=pk)
+  except Model.DoesNotExist:
+    return NotFound
+  ...
+  from rest_framework.status import HTTP_204_NO_CONTENT
 
-### 5.4 DRF APIView
+  queryset.delete()
+  return Response(status=HTTP_204_NO_CONTENT)
+  ```
+  - 실제 DB에서 queryset을 삭제하는 과정 `.delete()`이다
+  - 삭제로 인해 GET할 data가 없음을 보여주기 위해 `204 Error`를 `Response`한다.
+### 5.3 DRF APIView
+- FBV 대신 CBV를 사용했을 때 장점은 다음과 같다.
+  - `if..elif문` 대신 `Class Method`로 `HTTP_METHOD`를 관리하여 가독성이 높다
+  - `pk`인 `queryset`을 얻는 과정을 별도의 `Class Method`로 관리하면 코드가 간결해진다
+- CBV를 작성하는 방법은 다음과 같다.
+  1. `urls.py`에서 `class`를 view로 사용하려면 `.as_view()`을 추가해줘야 한다
+    ```python3
+    path("", views.RoomList.as_view()),
+    ```
+  2. `rest_framework.views.APIView`를 `import`하고 `inherit`한다
+    ```python3
+    from rest_framework.views import APIView
+
+    class RoomList(APIView):
+      ...
+    ```
+  3. HTTP Method 메서드의 인자는 `self`, `request` 그리고 url을 통해 받은 `변수`이다
+    ```python3
+    class RoomDetail(APIView):
+      def get(self, request, pk):
+        ...
+    ```
+### 5.4 DRF ModelSerializer

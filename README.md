@@ -672,3 +672,17 @@ class Model(TimeStampedModel):
   ```
   - fields는 json에 넣은 field를 튜플에 추가한다. 모든 field를 보여주려면 `"__all__"`으로 표현한다.
   - 반대로 제외할 field가 있다면 `exclude`를 한다
+  - fields를 직접 입력하는 경우, `pk` 항목을 넣어주자
+### 5.4.1 ModelSerializer로 `ForeignKey` 처리하기
+- ForeignKey를 fields에만 언급하면 `pk`값만 나온다
+- ForeignKey의 자세한 data가 필요하다면 해당 model의 `serializer`를 언급하면 된다
+  ```python3
+  class Serializer(ModelSerializer):
+
+    foreign_key = FkSerializer()
+
+    class Meta:
+      model = Model
+      fields = "__all__"
+  ```
+  - `ManytoManyField`의 경우, Serializer에 `many=True`를 언급해야 모든 개체를 포함한다

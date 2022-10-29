@@ -657,3 +657,18 @@ class Model(TimeStampedModel):
         ...
     ```
 ### 5.4 DRF ModelSerializer
+- 일반 Serializer가 Model Field를 일일히 대응시켜야 한다는 불편함이 있기 때문에 이를 해결해주는 게 `ModelSerializer`이다.
+- `rest_framework.serializers.ModelSerializer`를 `import`한다
+- `class Meta`를 열고 `model`과 `fields`를 설명한다
+  ```python3
+  from rest_framework import serializer
+  from .models import Model
+
+
+  class Serializer(ModelSerializer):
+    class Meta:
+      model = Model
+      fields = "__all__"
+  ```
+  - fields는 json에 넣은 field를 튜플에 추가한다. 모든 field를 보여주려면 `"__all__"`으로 표현한다.
+  - 반대로 제외할 field가 있다면 `exclude`를 한다

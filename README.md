@@ -752,6 +752,75 @@ class Model(TimeStampedModel):
     updated_data = serializer.save()
   ```
 3. `ForeignKey`를 포함한 data를 `Serializer` 거쳐주고 마지막으로 `Response`한다
+### 5.3.3 `ManyToManyField`를 Serialize할 때 `transaction`이 필요한 이유
+- `ForeignKey`와 달리 `ManyToManyField`는 `.save()`이후에 추가된다. 이는 `MTMField`가 error를 발생해도 이미 DB에 완성되지 않은 data가 저장되어버린다는 뜻이다
+- 이를 해결하기 위해서 `django.db.transaction`을 이용하여 `transaction.atomic` 도중에 발생하는 error가 발생할 경우, rollback하여 data가 DB에 저장되지 않도록 한다
+  ```python3
+  from django.db import transaction
+  ...
+  with transaction.atomic():
+    .save(~)
+    ...
+  ```
+### 5.3.4 `ManyToManyField`가 있는 App의 `POST` 처리하기
+1. `is_valid()` 이후에 `request.data`로부터 `MTMField`의 `pk list`를 저장한다
+  ```python3
+  mtm_pks = request.data.get("mtms")
+  ```
+2. `.save()` 이전에 `transaction.atomic()`을 진행한다
+  - `transaction`이 실패할 경우, 이를 error 처리하기 위해서 transaction 바깥쪽에 `try..except문`을 한다
+  ```python3
+  try:
+    with transaction.atomic():
+      new_data - serializer.save(~)
+      ...
+  ```
+3. client가 입력한 `amenities`가 있을 경우, `for문`을 돌려 각 pk에 대한 data를 DB에 찾아 `add`해준다
+  ```python3
+  if mtm_pks:
+    for mtm_pk in mtm_pks:
+      mtm = MtmField.objects.get(pk=mtm_pk)
+      new_data.mtms.add(mtm)
+  ```
+4. 만약 Except가 발생할 경우, 해당 `MTMField`가 존재하지 않는지, 기타 오류로 인한건지 구분해서 Error를 띄운다
+  ```python3
+  try:
+  ...
+  except Model.DoesNotExist:
+    raise ParseError("~")
+  excpet Exception as e:
+    raise ParseError(e)
+  ```
+### 5.3.5 `ManyToManyField`가 있는 App의 `PUT` 처리하기
+1. `is_valid()` 이후에 `request.data`로부터 `MTMField`의 `pk list`를 저장한다
+  ```python3
+  mtm_pks = request.data.get("mtms")
+  ```
+2. `.save()` 이전에 `transaction.atomic()`을 진행한다
+  - `transaction`이 실패할 경우, 이를 error 처리하기 위해서 transaction 바깥쪽에 `try..except문`을 한다
+  ```python3
+  try:
+    with transaction.atomic():
+      updated_data = serializer.save(~)
+      ...
+  ```
+3. client가 입력한 `amenities`가 있을 경우, 한번 `clear`해주고 `for문`을 돌려 각 pk에 대한 data를 DB에 찾아 `add`해준다
+  ```python3
+  if mtm_pks:
+    updated_data.mtms.clear()
+    for mtm_pk in mtm_pks:
+      mtm = MtmField.objects.get(pk=mtm_pk)
+      new_data.mtms.add(mtm)
+  ```
+4. 만약 Except가 발생할 경우, 해당 `MTMField`가 존재하지 않는지, 기타 오류로 인한건지 구분해서 Error를 띄운다
+  ```python3
+  try:
+  ...
+  except Model.DoesNotExist:
+    raise ParseError("~")
+  excpet Exception as e:
+    raise ParseError(e)
+  ```
 ### 5.4 DRF ModelSerializer
 - 일반 Serializer가 Model Field를 일일히 대응시켜야 한다는 불편함이 있기 때문에 이를 해결해주는 게 `ModelSerializer`이다.
 - `rest_framework.serializers.ModelSerializer`를 `import`한다

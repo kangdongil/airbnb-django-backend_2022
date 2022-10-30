@@ -43,6 +43,9 @@ class Room(TimeStampedModel):
 
     def total_amenities(room):
         return room.amenities.count()
+    
+    def total_reviews(room):
+        return room.reviews.count()
 
     def average_ratings(room):
         reviews = room.reviews.count()

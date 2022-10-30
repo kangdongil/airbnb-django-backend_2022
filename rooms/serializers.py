@@ -37,9 +37,16 @@ class RoomListSerializer(ModelSerializer):
 class RoomDetailSerializer(ModelSerializer):
     
     owner=TinyUserSerializer(read_only=True)
-    amenities=AmenitySerializer(read_only=True, many=True)
     category=CategorySerializer(read_only=True)
-    
+    total_reviews = SerializerMethodField()
+    total_amenities = SerializerMethodField()
+
     class Meta:
         model=Room
-        fields= "__all__"
+        exclude=("amenities",)
+    
+    def get_total_amenities(self, room):
+        return room.total_amenities()
+
+    def get_total_reviews(self, room):
+        return room.total_reviews()

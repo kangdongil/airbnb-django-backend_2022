@@ -200,6 +200,18 @@ class RoomReviews(APIView, ListPagination):
             "page": self.paginated_info(),
             "content": serializer.data,
         })
+    
+    def post(self, request, pk):
+        room = self.get_object(pk)
+        serializer = ReviewSerializer(data=request.data)
+        if serializer.is_valid():
+            review = serializer.save(
+                user = request.user,
+                room = room,
+            )
+            serializer = ReviewSerializer(review)
+            return Response(serializer.data)
+        
 
 class RoomAmenities(APIView, ListPagination):
     def get_object(self, pk):

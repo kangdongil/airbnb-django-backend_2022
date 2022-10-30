@@ -5,6 +5,7 @@ from rest_framework.exceptions import NotFound, NotAuthenticated, PermissionDeni
 from rest_framework import status
 from .models import Room, Amenity
 from .serializers import RoomListSerializer, RoomDetailSerializer, AmenitySerializer
+from common.paginations import ListPagination
 from categories.models import Category
 from reviews.serializers import ReviewSerializer
 
@@ -175,7 +176,7 @@ class RoomDetail(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class RoomReviews(APIView):
+class RoomReviews(APIView, ListPagination):
     def get_object(self, pk):
         try:
             return Room.objects.get(pk=pk)
@@ -185,8 +186,14 @@ class RoomReviews(APIView):
     def get(self, request, pk):
         room = self.get_object(pk)
         reviews = room.reviews.all()
-        serializer = ReviewSerializer(reviews, many=True)
-        return Response(serializer.data)
+        serializer = ReviewSerializer(
+            self.paginate(reviews, request),
+            many=True,
+        )
+        return Response({
+            "page": self.paginated_info(),
+            "content": serializer.data,
+        })
 
 class RoomAmenities(APIView):
     def get_object(self, pk):

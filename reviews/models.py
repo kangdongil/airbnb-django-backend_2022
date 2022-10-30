@@ -27,6 +27,17 @@ class Review(TimeStampedModel):
     payload = models.TextField(null=True, blank=True)
     rating = models.PositiveIntegerField()
 
+    def category(review):
+        if review.room and not review.experience:
+            return "Room"
+        elif not review.room and review.experience:
+            return "Experience"
 
+    def target_name(review):
+        if review.room and not review.experience:
+            return f"{review.room}"
+        elif not review.room and review.experience:
+            return f"{review.experience}"
+            
     def __str__(review):
         return f"{review.user} / ★{review.rating}"

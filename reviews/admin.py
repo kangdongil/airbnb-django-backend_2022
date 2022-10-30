@@ -7,6 +7,8 @@ class ReviewAdmin(admin.ModelAdmin):
     
     list_display = (
         "__str__",
+        "category",
+        "target_name",
         "payload",
     )
     list_filter = (

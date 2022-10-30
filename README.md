@@ -564,6 +564,11 @@ class Model(TimeStampedModel):
 2. POST
   ```python3
   # views.py
+  if not request.user.is_authenticated:
+    return NotAuthenticated
+  ```
+  - POST하기 전에, 사이트에 인증받은(`Authenticated`) 세션인지 확인한다
+  ```python3
   serializer = Serializer(data=request.data)
   if serializer.is_valid():
     new_data = serializer.save()
@@ -586,6 +591,14 @@ class Model(TimeStampedModel):
   - `.objects.create(~)`로 data를 DB에 생성한다
   - `valid`된 data를 `**`를 앞에 붙여 자동으로 처리하게 한다
 3. PUT
+  ```python3
+  if not request.user.is_authenticated:
+    return NotAuthenticated
+  if model.owner != request.user:
+    return PermissionDenied
+  ```
+  - 인증(`Authenticated`)받은 세션인가?
+  - 해당 data를 만든 장본인(`Permission`)인가?
   ```python3
   try:
     queryset = Model.objects.get(pk=pk)
@@ -622,6 +635,14 @@ class Model(TimeStampedModel):
   - 마지막으로 `instance`를 `save`하고 `return`한다
 4. DELETE
   ```python3
+  if not request.user.is_authenticated:
+    return NotAuthenticated
+  if model.owner != request.user:
+    return PermissionDenied
+  ```
+  - 인증(`Authenticated`)받은 세션인가?
+  - 해당 data를 만든 장본인(`Permission`)인가?
+  ```python3
   try:
     queryset = Model.objects.get(pk=pk)
   except Model.DoesNotExist:
@@ -634,6 +655,40 @@ class Model(TimeStampedModel):
   ```
   - 실제 DB에서 queryset을 삭제하는 과정 `.delete()`이다
   - 삭제로 인해 GET할 data가 없음을 보여주기 위해 `204 Error`를 `Response`한다.
+### 5.2.2 DRF Error와 DRF StatusCode
+1. `rest_framework.exceptions`
+  - 해당 exception 상황에서 error를 `raise`하면 된다
+  - `NotFound`: 해당 data가 존재하지 않을 때,
+    ```python3
+    try:
+      data = Model.objects.get(pk=pk)
+      ...
+    except Model.DoesNotExist:
+      raise NotFound
+    ```
+  - `NotAuthenticated`: 로그인하지 않은 세션일 때,
+    ```python3
+    if not request.user.is_authenticated:
+      raise NotAuthenticated 
+    ```
+  - `PermissionDenied`: data의 주인이 아닌 자가 `PUT`이나 `DELETE`를 시도할 때,
+    ```python3
+    if model.owner != request.user:
+      raise PermissionDenied
+    ```
+  - `ParseError`: 기타 유효하지 않은 Data에 대한 Error
+    ```python3
+    raise ParseError("Invalid Data")
+    ```
+2. `rest_framework.status`
+  - Response할 때, `statuscode`를 보낼 수 있다
+    ```python3
+    ...
+    return Response(status=~)
+    ```
+  - `HTTP_200_OK`: 정상적인 Response
+  - `HTTP_204_NO_CONTENT`: data를 delete했을 때,
+  - `HTTP_404_NOT_FOUND`: 해당 page가 존재하지 않을 때,
 ### 5.3 DRF APIView
 - FBV 대신 CBV를 사용했을 때 장점은 다음과 같다.
   - `if..elif문` 대신 `Class Method`로 `HTTP_METHOD`를 관리하여 가독성이 높다
@@ -656,6 +711,116 @@ class Model(TimeStampedModel):
       def get(self, request, pk):
         ...
     ```
+### 5.3.1 `ForeignKey`가 있는 App의 `POST` 처리하기
+1. `.is_valid()` 이후, `request.data.get(~)`을 통해 ForeignKey의 pk 값을 저장한다
+  - 해당 ForeignKey가 `null=True`가 아니라면 `pk가 존재`하는지 확인한다.
+  - `pk`인 data가 DB에 존재하는지 확인한다.
+    ```python3
+    foreignkey_pk = request.data.get("foreignkey")
+    try:
+      queryset = Model.objects.get(pk=foreignkey_pk)
+      ...
+    except Model.DoesNotExist:
+      raise ParseError("Data not found.")
+    ```
+2. `.save(~)` 안에 validated된 foreignkey를 직접 넣어준다
+  ```python3
+  new_data = serializer.save(
+    owner=request.user,
+    model=queryset,
+  )
+  ```
+3. `ForeignKey`를 포함한 data를 `Serializer` 거쳐주고 마지막으로 `Response`한다
+### 5.3.2 `ForeignKey`가 있는 App의 `PUT` 처리하기
+1. `.is_valid()` 이후, `request.data.get(~)`을 통해 ForeignKey의 pk 값을 저장한다
+  - client가 입력한 ForeignKey data에 `pk`가 존재하는지 확인한다.
+  - `pk`인 data가 DB에 존재하는지 확인한다.
+    ```python3
+    foreignkey_pk = request.data.get("foreignkey")
+    try:
+      queryset = Model.objects.get(pk=foreignkey_pk)
+      ...
+    except Model.DoesNotExist:
+      raise ParseError("Data not found.")
+    ```
+2. 수정하고자 하는 Foreignkey Data가 있는지 여부에 따라 `.save()`를 다르게 처리한다
+  ```python3
+  if foreignkey_pk:
+    ...
+    updated_data = serializer.save(data=data)
+  else:
+    updated_data = serializer.save()
+  ```
+3. `ForeignKey`를 포함한 data를 `Serializer` 거쳐주고 마지막으로 `Response`한다
+### 5.3.3 `ManyToManyField`를 Serialize할 때 `transaction`이 필요한 이유
+- `ForeignKey`와 달리 `ManyToManyField`는 `.save()`이후에 추가된다. 이는 `MTMField`가 error를 발생해도 이미 DB에 완성되지 않은 data가 저장되어버린다는 뜻이다
+- 이를 해결하기 위해서 `django.db.transaction`을 이용하여 `transaction.atomic` 도중에 발생하는 error가 발생할 경우, rollback하여 data가 DB에 저장되지 않도록 한다
+  ```python3
+  from django.db import transaction
+  ...
+  with transaction.atomic():
+    .save(~)
+    ...
+  ```
+### 5.3.4 `ManyToManyField`가 있는 App의 `POST` 처리하기
+1. `is_valid()` 이후에 `request.data`로부터 `MTMField`의 `pk list`를 저장한다
+  ```python3
+  mtm_pks = request.data.get("mtms")
+  ```
+2. `.save()` 이전에 `transaction.atomic()`을 진행한다
+  - `transaction`이 실패할 경우, 이를 error 처리하기 위해서 transaction 바깥쪽에 `try..except문`을 한다
+  ```python3
+  try:
+    with transaction.atomic():
+      new_data - serializer.save(~)
+      ...
+  ```
+3. client가 입력한 `amenities`가 있을 경우, `for문`을 돌려 각 pk에 대한 data를 DB에 찾아 `add`해준다
+  ```python3
+  if mtm_pks:
+    for mtm_pk in mtm_pks:
+      mtm = MtmField.objects.get(pk=mtm_pk)
+      new_data.mtms.add(mtm)
+  ```
+4. 만약 Except가 발생할 경우, 해당 `MTMField`가 존재하지 않는지, 기타 오류로 인한건지 구분해서 Error를 띄운다
+  ```python3
+  try:
+  ...
+  except Model.DoesNotExist:
+    raise ParseError("~")
+  excpet Exception as e:
+    raise ParseError(e)
+  ```
+### 5.3.5 `ManyToManyField`가 있는 App의 `PUT` 처리하기
+1. `is_valid()` 이후에 `request.data`로부터 `MTMField`의 `pk list`를 저장한다
+  ```python3
+  mtm_pks = request.data.get("mtms")
+  ```
+2. `.save()` 이전에 `transaction.atomic()`을 진행한다
+  - `transaction`이 실패할 경우, 이를 error 처리하기 위해서 transaction 바깥쪽에 `try..except문`을 한다
+  ```python3
+  try:
+    with transaction.atomic():
+      updated_data = serializer.save(~)
+      ...
+  ```
+3. client가 입력한 `amenities`가 있을 경우, 한번 `clear`해주고 `for문`을 돌려 각 pk에 대한 data를 DB에 찾아 `add`해준다
+  ```python3
+  if mtm_pks:
+    updated_data.mtms.clear()
+    for mtm_pk in mtm_pks:
+      mtm = MtmField.objects.get(pk=mtm_pk)
+      new_data.mtms.add(mtm)
+  ```
+4. 만약 Except가 발생할 경우, 해당 `MTMField`가 존재하지 않는지, 기타 오류로 인한건지 구분해서 Error를 띄운다
+  ```python3
+  try:
+  ...
+  except Model.DoesNotExist:
+    raise ParseError("~")
+  excpet Exception as e:
+    raise ParseError(e)
+  ```
 ### 5.4 DRF ModelSerializer
 - 일반 Serializer가 Model Field를 일일히 대응시켜야 한다는 불편함이 있기 때문에 이를 해결해주는 게 `ModelSerializer`이다.
 - `rest_framework.serializers.ModelSerializer`를 `import`한다
@@ -672,3 +837,63 @@ class Model(TimeStampedModel):
   ```
   - fields는 json에 넣은 field를 튜플에 추가한다. 모든 field를 보여주려면 `"__all__"`으로 표현한다.
   - 반대로 제외할 field가 있다면 `exclude`를 한다
+  - fields를 직접 입력하는 경우, `pk` 항목을 넣어주자
+### 5.4.1 ModelSerializer로 `ForeignKey` 처리하기
+- ForeignKey를 fields에만 언급하면 `pk`값만 나온다
+- ForeignKey의 자세한 data가 필요하다면 해당 model의 `serializer`를 언급하면 된다
+  ```python3
+  class Serializer(ModelSerializer):
+
+    foreign_key = FkSerializer()
+
+    class Meta:
+      model = Model
+      fields = "__all__"
+  ```
+  - `ManytoManyField`의 경우, Serializer에 `many=True`를 언급해야 모든 개체를 포함한다
+- `ForeignKey`를 `POST`나 `PUT`할 경우, `read_only=True`로 처리하고 View 로직으로 직접 처리한다
+### 5.4.2 `SerializerMethodField`로 `Method` data를 json에 넣기
+1. `rest_framework.serializers.SerializerMethodField`를 import하기
+2. `Serializer Class`에 `SerializerMethodField` 정의하기
+  ```python3
+  class Serializer(ModelSerializer):
+    rating = SerializerMethodField()
+  ```
+3. 해당 `SerializerMethodField`를 `get_` method로 처리하기
+  ```python3
+  def get_[method](self, instance):
+    return model.model_method()
+  ```
+4. 해당 `SerializerMethodField`를 `list_display`에 표현하기
+  ```python3
+  class Meta:
+    fields = (
+      ...
+      "method",
+    )
+  ```
+### 5.4.3 `Serializer Context`로 `request` data를 `serializer`에 가져오기
+1. `view` 안에 Serializer에 `context` 항목을 추가하기
+  ```python3
+  Serializer(
+    queryset,
+    context={"request": request},
+  )
+  ```
+2. `SerializerMethodField`를 정의하고 `self.context`에서 `request`를 가져오기
+  ```python3
+  is_owner = SerializerMethodField()
+
+  def get_is_owner(self, room):
+    request = self.context["request"]
+    return room.owner == request.user
+  ```
+### 5.5 상황별 Serializers 구상하기
+1. Data 구조가 단순하고 수량이 적다면 App `Serializer` 하나면 충분하다
+2. Data 개수가 많다면 `List`형과 `Detail`형을 나누어 관리한다
+  - `List`형은 말그대로 목록에 드러나는 경우로 일부 정보만 드러낸다
+  - `Detail`형은 특정 한 경우를 자세히 설명하는 것으로 거의 모든 정보를 드러낸다
+3. `User`처럼 본인에게만 허용되는 정보가 포함된다면 `Private`, `Public`으로 나눠서 관리하며 필요할 경우 추가로 만든다
+  - `Private`
+  - `Public`
+  - `User`의 경우, `TinyUserSerializer`를 만들어 `avatar`와 `name`만 드러낼 수 있다

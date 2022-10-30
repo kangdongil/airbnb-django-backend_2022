@@ -10,14 +10,17 @@ from categories.models import Category
 from reviews.serializers import ReviewSerializer
 
 
-class AmenityList(APIView):
+class AmenityList(APIView, ListPagination):
     def get(self, request):
         all_amenities = Amenity.objects.all()
         serializer = AmenitySerializer(
-            all_amenities,
+            self.paginate(all_amenities, request),
             many=True,
         )
-        return Response(serializer.data)
+        return Response({
+            "page": self.paginated_info(),
+            "content": serializer.data,
+        })
     
     def post(self, request):
         serializer = AmenitySerializer(
@@ -63,15 +66,18 @@ class AmenityDetail(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class RoomList(APIView):
+class RoomList(APIView, ListPagination):
     def get(self, request):
         all_rooms = Room.objects.all()
         serializer = RoomListSerializer(
-            all_rooms,
+            self.paginate(all_rooms,request),
             many=True,
             context={"request": request},
         )
-        return Response(serializer.data)
+        return Response({
+            "page": self.paginated_info(),
+            "content": serializer.data,
+        })
     
     def post(self, request):
         if not request.user.is_authenticated:
@@ -195,7 +201,7 @@ class RoomReviews(APIView, ListPagination):
             "content": serializer.data,
         })
 
-class RoomAmenities(APIView):
+class RoomAmenities(APIView, ListPagination):
     def get_object(self, pk):
         try:
             return Room.objects.get(pk=pk)
@@ -205,5 +211,11 @@ class RoomAmenities(APIView):
     def get(self, request, pk):
         room = self.get_object(pk)
         amenities = room.amenities.all()
-        serializer = AmenitySerializer(amenities, many=True)
-        return Response(serializer.data)
+        serializer = AmenitySerializer(
+            self.paginate(amenities),
+            many=True,
+        )
+        return Response({
+            "page": self.paginated_info(),
+            "content": serializer.data,
+        })

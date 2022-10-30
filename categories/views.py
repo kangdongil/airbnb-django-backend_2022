@@ -4,14 +4,20 @@ from rest_framework.exceptions import NotFound
 from rest_framework.status import HTTP_204_NO_CONTENT
 from .models import Category
 from .serializers import CategorySerializer
+from common.paginations import ListPagination
 
-
-class CategoryList(APIView):
+class CategoryList(APIView, ListPagination):
     
     def get(self, request):
         all_categories = Category.objects.all()
-        serializer = CategorySerializer(all_categories, many=True)
-        return Response(serializer.data)
+        serializer = CategorySerializer(
+            self.paginate(all_categories, request),
+            many=True,
+        )
+        return Response({
+            "page": self.paginated_info(),
+            "content": serializer.data,
+        })
     
     def post(self, request):
         serializer = CategorySerializer(data=request.data)

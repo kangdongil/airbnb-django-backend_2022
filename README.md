@@ -490,6 +490,13 @@ class Model(TimeStampedModel):
   ```python3
   path("<int:pk>", views.RoomDetail.as_view())
   ```
+### 4.1.1 Reverse Accessor CRUD URL 분리하기
+- `RoomReviews`, `RooomPhotos`와 같이 Reverse Accessor로 처리하는 경우 CRUD를 구분하는 것이 편리하다
+  - `GET` 경우 Relationship을 URL에 드러내는 것이 좋다
+    - `/rooms/1/reviews/`
+  - `POST`의 경우도 일괄 처리하기 편리하게 Relationship 표시한다
+  - `DELETE`나 `PUT`의 경우 각 Instance에 대한 처리이므로 별도 처리가 편하다
+    - `reivews/35`
 ### 4.2 Django View
 - 모든 `View` function은 첫번째 인자로 `request`를 가진다
 - `URL`에 `변수`를 주면 View Function은 인자를 받을 수 있다

@@ -421,6 +421,26 @@ class Model(TimeStampedModel):
     - `.get`은 param이 있을 때 `match` Dictionary를 참고하지만, 없다면 전체 queryset을 돌려준다
 - `Custom Filter`를 `admin.py`에 `import`하고 `list_display`에 추가한다
 
+### 3.4 Media App
+- Media를 Local에서 처리할 때와 별도의 DB에서 media를 다룰 때가 다르다.
+- Local에서 Media를 다룰 경우,
+  - `Model`: `ImageField` / `FileField` 사용하기
+    - `poetry add pillow`
+  - `config.settings`: `MEDIA_ROOT`와 `MEDIA_URL` 정하기
+    - `MEDIA_ROOT`: 프로젝트 내 실제 파일을 저장하는 장소
+    - `MEDIA_URL`: 해당 파일을 접근하는 URL
+  - `config.urls`: urlpatterns에 `static`을 설정해준다
+    ```python3
+    from django.conf.urls.static import static
+    from django.conf import settings
+
+    urlpatterns = [
+      ...
+    ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    ```
+- 별도의 DB에서 Media를 다룰 경우,
+  - Media를 다루는 모든 Field를 `URLField`로 바꾸기
+
 ## 4.0 Django Url & Django View
 ### 4.0.1 Django가 웹을 구현하는 과정
 - Django가 BackEnd에서 FrontEnd로 Data를 구현할 때,   

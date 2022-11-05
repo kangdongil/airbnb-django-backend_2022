@@ -6,7 +6,7 @@ class Photo(TimeStampedModel):
 
     """ Photo Model Definition """
 
-    file = models.ImageField()
+    file = models.URLField()
     description = models.CharField(max_length=250, default="")
     room = models.ForeignKey(
         "rooms.Room",
@@ -31,7 +31,7 @@ class Video(TimeStampedModel):
 
     """ Video Model Definition """
 
-    file = models.FileField()
+    file = models.URLField()
     description = models.CharField(max_length=250, default="")
     experience = models.ForeignKey(
         "experiences.Experience",

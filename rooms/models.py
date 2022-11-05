@@ -56,6 +56,9 @@ class Room(TimeStampedModel):
             for review in room.reviews.all().values("rating"):
                 total_ratings += review["rating"]
             return round(total_ratings / reviews, 2)
+    
+    def total_photos(room):
+        return room.photos.count()
 
     def __str__(self):
         return self.name

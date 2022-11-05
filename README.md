@@ -421,6 +421,26 @@ class Model(TimeStampedModel):
     - `.get`은 param이 있을 때 `match` Dictionary를 참고하지만, 없다면 전체 queryset을 돌려준다
 - `Custom Filter`를 `admin.py`에 `import`하고 `list_display`에 추가한다
 
+### 3.4 Media App
+- Media를 Local에서 처리할 때와 별도의 DB에서 media를 다룰 때가 다르다.
+- Local에서 Media를 다룰 경우,
+  - `Model`: `ImageField` / `FileField` 사용하기
+    - `poetry add pillow`
+  - `config.settings`: `MEDIA_ROOT`와 `MEDIA_URL` 정하기
+    - `MEDIA_ROOT`: 프로젝트 내 실제 파일을 저장하는 장소
+    - `MEDIA_URL`: 해당 파일을 접근하는 URL
+  - `config.urls`: urlpatterns에 `static`을 설정해준다
+    ```python3
+    from django.conf.urls.static import static
+    from django.conf import settings
+
+    urlpatterns = [
+      ...
+    ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    ```
+- 별도의 DB에서 Media를 다룰 경우,
+  - Media를 다루는 모든 Field를 `URLField`로 바꾸기
+
 ## 4.0 Django Url & Django View
 ### 4.0.1 Django가 웹을 구현하는 과정
 - Django가 BackEnd에서 FrontEnd로 Data를 구현할 때,   
@@ -470,6 +490,13 @@ class Model(TimeStampedModel):
   ```python3
   path("<int:pk>", views.RoomDetail.as_view())
   ```
+### 4.1.1 Reverse Accessor CRUD URL 분리하기
+- `RoomReviews`, `RooomPhotos`와 같이 Reverse Accessor로 처리하는 경우 CRUD를 구분하는 것이 편리하다
+  - `GET` 경우 Relationship을 URL에 드러내는 것이 좋다
+    - `/rooms/1/reviews/`
+  - `POST`의 경우도 일괄 처리하기 편리하게 Relationship 표시한다
+  - `DELETE`나 `PUT`의 경우 각 Instance에 대한 처리이므로 별도 처리가 편하다
+    - `reivews/35`
 ### 4.2 Django View
 - 모든 `View` function은 첫번째 인자로 `request`를 가진다
 - `URL`에 `변수`를 주면 View Function은 인자를 받을 수 있다

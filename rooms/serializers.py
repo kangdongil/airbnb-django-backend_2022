@@ -2,6 +2,7 @@ from rest_framework.serializers import ModelSerializer, SerializerMethodField
 from .models import Room, Amenity
 from users.serializers import TinyUserSerializer
 from categories.serializers import CategorySerializer
+from medias.serializers import PhotoSerializer
 
 
 class AmenitySerializer(ModelSerializer):
@@ -36,15 +37,23 @@ class RoomListSerializer(ModelSerializer):
 
 class RoomDetailSerializer(ModelSerializer):
     
-    owner=TinyUserSerializer(read_only=True)
-    category=CategorySerializer(read_only=True)
+    owner = TinyUserSerializer(read_only=True)
+    category = CategorySerializer(read_only=True)
+    amenities = AmenitySerializer(
+        read_only=True,
+        many=True,
+    )
+    photos = PhotoSerializer(
+        read_only=True,
+        many=True,
+    )
     total_reviews = SerializerMethodField()
     total_amenities = SerializerMethodField()
     total_photos = SerializerMethodField()
 
     class Meta:
         model=Room
-        exclude=("amenities",)
+        fields = "__all__"
     
     def get_total_amenities(self, room):
         return room.total_amenities()

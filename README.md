@@ -716,6 +716,22 @@ class Model(TimeStampedModel):
   - `HTTP_200_OK`: 정상적인 Response
   - `HTTP_204_NO_CONTENT`: data를 delete했을 때,
   - `HTTP_404_NOT_FOUND`: 해당 page가 존재하지 않을 때,
+### 5.2.3 DRF Permissions
+- `IsAuthenticated`한지 직접 조건문을 작성하지 않고 import할 수 있다.
+  1. `rest_framework.permissions`를 import하기
+  2. `IsAuthenticated` 혹은 `IsAuthenticatedOrReadOnly` 선택하기
+    - `IsAuthenticated`: 허가된 자만 모든 CRUD 행위 가능함
+    - `IsAuthenticatedOrReadOnly`: `GET`을 제외한 모든 CRUD 행위는 허가된 자만 가능함
+  3. `permission_classes`에 포함시키기
+    ```python3
+    from rest_framework.permissions import IsAuthenticatedOrReadOnly
+
+    class VIEW(APIView):
+      
+      permission_classes = [IsAuthenticatedOrReadOnly]
+
+      ...
+    ```
 ### 5.3 DRF APIView
 - FBV 대신 CBV를 사용했을 때 장점은 다음과 같다.
   - `if..elif문` 대신 `Class Method`로 `HTTP_METHOD`를 관리하여 가독성이 높다

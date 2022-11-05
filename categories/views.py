@@ -1,6 +1,7 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import NotFound
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.status import HTTP_204_NO_CONTENT
 from .models import Category
 from .serializers import CategorySerializer
@@ -8,6 +9,8 @@ from common.paginations import ListPagination
 
 class CategoryList(APIView, ListPagination):
     
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
     def get(self, request):
         all_categories = Category.objects.all()
         serializer = CategorySerializer(
@@ -31,6 +34,8 @@ class CategoryList(APIView, ListPagination):
 
 class CategoryDetail(APIView):
 
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    
     def get_object(self, pk):
         try:
             category = Category.objects.get(pk=pk)

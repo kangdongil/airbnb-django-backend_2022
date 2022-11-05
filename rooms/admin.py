@@ -37,10 +37,10 @@ class AmenityAdmin(admin.ModelAdmin):
     list_display = (
         "name",
         "description",
-        "created",
-        "updated",
+        "created_at",
+        "updated_at",
     )
     readonly_fields = (
-        "created",
-        "updated",
+        "created_at",
+        "updated_at",
     )

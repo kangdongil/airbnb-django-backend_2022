@@ -232,13 +232,22 @@ class RoomAmenities(APIView, ListPagination):
             "content": serializer.data,
         })
 
-class RoomPhotos(APIView):
+class RoomPhotos(APIView, ListPagination):
     def get_object(self, pk):
         try:
             return Room.objects.get(pk=pk)
         except Room.DoesNotExist:
             return NotFound
     
+    def get(self, request, pk):
+        room = self.get_object(pk)
+        photos = room.photos.all()
+        serializer = PhotoSerializer(
+            self.paginate(photos, request),
+            many=True,
+        )
+        return Response(serializer.data)
+
     def post(self, request, pk):
         room = self.get_object(pk)
         if not request.user.is_authenticated:

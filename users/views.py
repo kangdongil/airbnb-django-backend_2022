@@ -2,12 +2,16 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.password_validation import validate_password
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import NotFound, ParseError
+from rest_framework.exceptions import NotFound, PermissionDenied, ParseError
 from rest_framework import status
 from rest_framework.response import Response
 from .models import User
-from .serializers import PrivateUserSerializer
-
+from .serializers import PrivateUserSerializer, PublicUserSerializer
+from common.paginations import ListPagination
+from rooms.models import Room
+from rooms.serializers import HostRoomSerializer
+from reviews.models import Review
+from reviews.serializers import UserReviewSerializer, HostReviewSerializer
 
 class MyProfile(APIView):
 
@@ -39,9 +43,73 @@ class PublicProfile(APIView):
             user = User.objects.get(username=username)
         except User.DoesNotExist:
             raise NotFound
-        serializer = PrivateUserSerializer(user)
+        serializer = PublicUserSerializer(user)
         return Response(serializer.data)
 
+
+class UserReviews(APIView, ListPagination):
+    def get_object(self, username):
+        try:
+            return User.objects.get(username=username)
+        except User.DoesNotExist:
+            raise NotFound
+        
+    def get(self, request, username):
+        user = self.get_object(username)
+        reviews = Review.objects.filter(user=user)\
+            .order_by("-created_at")
+        serializer = UserReviewSerializer(
+            self.paginate(reviews, request),
+            many=True,
+        )
+        return Response({
+            "page": self.paginated_info(),
+            "content": serializer.data,
+        })
+
+
+class HostRooms(APIView, ListPagination):
+    def get_object(self, username):
+        try:
+            return User.objects.get(username=username)
+        except User.DoesNotExist:
+            raise NotFound
+
+    def get(self, request, username):
+        owner = self.get_object(username)
+        if owner.is_host != True:
+            raise ParseError("This user is not a host.")
+        rooms = Room.objects.filter(owner=owner).order_by("-created_at")
+        serializer = HostRoomSerializer(
+            self.paginate(rooms, request),
+            many=True,
+        )
+        return Response({
+            "page": self.paginated_info(),
+            "content": serializer.data,
+        })
+
+
+class HostReviews(APIView, ListPagination):
+    def get_object(self, username):
+        try:
+            return User.objects.get(username=username)
+        except User.DoesNotExist:
+            raise NotFound
+    
+    def get(self, request, username):
+        owner = self.get_object(username)
+        if owner.is_host != True:
+            raise ParseError("This user is not a host.")
+        reviews = Review.objects.filter(room__owner=owner).order_by("-created_at")
+        serializer = HostReviewSerializer(
+            self.paginate(reviews, request),
+            many=True,
+        )
+        return Response({
+            "page": self.paginated_info(),
+            "content": serializer.data,
+        })
 
 class CreateAccount(APIView):
     def post(self, request):

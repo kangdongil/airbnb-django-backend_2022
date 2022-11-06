@@ -942,7 +942,7 @@ class Model(TimeStampedModel):
   - `User`의 경우, `TinyUserSerializer`를 만들어 `avatar`와 `name`만 드러낼 수 있다
 
 ## PublicUserProfile Code Challenge
-[ ] User's Reviews
-[ ] if is_host:
-[ ] User's Rooms
-[ ] Host Reviews
+[x] User's Reviews
+[x] if is_host:
+[x] User's Rooms
+[x] Host Reviews

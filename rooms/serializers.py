@@ -48,18 +48,10 @@ class RoomDetailSerializer(ModelSerializer):
         many=True,
     )
     total_reviews = SerializerMethodField()
-    total_amenities = SerializerMethodField()
-    total_photos = SerializerMethodField()
 
     class Meta:
         model=Room
         fields = "__all__"
-    
-    def get_total_amenities(self, room):
-        return room.total_amenities()
 
     def get_total_reviews(self, room):
         return room.total_reviews()
-
-    def get_total_photos(self, room):
-        return room.total_photos()

@@ -1,8 +1,8 @@
-from rest_framework import serializers
+from rest_framework.serializers import ModelSerializer
 from .models import Review
 from users.serializers import TinyUserSerializer
 
-class ReviewSerializer(serializers.ModelSerializer):
+class ReviewSerializer(ModelSerializer):
     
     user = TinyUserSerializer(read_only=True)
     
@@ -12,4 +12,5 @@ class ReviewSerializer(serializers.ModelSerializer):
             "user",
             "payload",
             "rating",
+            "created_at",
         )

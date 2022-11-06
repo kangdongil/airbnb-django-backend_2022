@@ -38,7 +38,7 @@ class PublicProfile(APIView):
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist:
-            return NotFound
+            raise NotFound
         serializer = PrivateUserSerializer(user)
         return Response(serializer.data)
 

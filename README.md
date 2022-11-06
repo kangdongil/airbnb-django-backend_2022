@@ -946,4 +946,3 @@ class Model(TimeStampedModel):
 [ ] if is_host:
 [ ] User's Rooms
 [ ] Host Reviews
-[ ] RoomPhoto Thumbnail

@@ -1,4 +1,4 @@
-from django.db import transaction
+from django.contrib.auth.password_validation import validate_password
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import NotFound, ParseError
@@ -47,17 +47,17 @@ class CreateAccount(APIView):
         password = request.data.get("password")
         if not password:
             raise ParseError("Password is required.")
+        try:
+            validate_password(password)
+        except Exception as e:
+            raise ParseError(e)
         serializer = PrivateUserSerializer(data=request.data)
         if serializer.is_valid():
-            try:
-                with transaction.atomic():
-                    new_user = serializer.save()
-                    new_user.set_password(password)
-                    new_user.save()
-                    serializer = PrivateUserSerializer(new_user)
-                    return Response(serializer.data)
-            except Exception as e:
-                raise ParseError(e)
+            new_user = serializer.save()
+            new_user.set_password(password)
+            new_user.save()
+            serializer = PrivateUserSerializer(new_user)
+            return Response(serializer.data)
         else:
             return Response(serializer.errors)
 
@@ -72,10 +72,14 @@ class ChangePassword(APIView):
         new_password = request.data.get("new_password")
         if not old_password or not new_password:
             raise ParseError
+        try:
+            validate_password(new_password)
+        except Exception as e:
+            raise ParseError(e)
         if user.check_password(old_password):
             user.set_password(new_password)
             user.save()
             return Response(status=status.HTTP_200_OK)
         else:
-            raise ParseError
+            raise ParseError("Invalid Password")
     

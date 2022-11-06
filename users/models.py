@@ -21,7 +21,8 @@ class User(AbstractUser):
         JPY = ("jpy", "Japanese Yen")
         EUR = ("eur", "Euro")
 
-    name = models.CharField(max_length=150, default="")
+    name = models.CharField(max_length=150)
+    about = models.TextField(default="")
     first_name = models.CharField(
         max_length=150,
         editable=False,

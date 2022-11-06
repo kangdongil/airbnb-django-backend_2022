@@ -12,7 +12,6 @@ class RoomAdmin(admin.ModelAdmin):
         "price",
         "kind",
         "owner",
-        "total_amenities",
         "average_ratings",
     )
 
@@ -37,10 +36,10 @@ class AmenityAdmin(admin.ModelAdmin):
     list_display = (
         "name",
         "description",
-        "created",
-        "updated",
+        "created_at",
+        "updated_at",
     )
     readonly_fields = (
-        "created",
-        "updated",
+        "created_at",
+        "updated_at",
     )

@@ -1,11 +1,11 @@
 from rest_framework.serializers import ModelSerializer
 from .models import Wishlist
-from rooms.serializers import RoomListSerializer
+from rooms.serializers import WishlistRoomSerializer
 
 
 class WishlistSerializer(ModelSerializer):
     
-    rooms = RoomListSerializer(
+    rooms = WishlistRoomSerializer(
         many=True,
         read_only=True,
     )

@@ -92,7 +92,7 @@ class WishlistDetail(APIView):
                 raise ParseError("Room Not Found")
             except Exception as e:
                 raise ParseError(e)
-                
+
             serializer = WishlistSerializer(
                 updated_wishlist,
                 context={"request": request},
@@ -105,3 +105,27 @@ class WishlistDetail(APIView):
         wishlist = self.get_object(pk, request.user)
         wishlist.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class WishlistToggle(APIView):
+
+    def get_list(self, pk, owner):
+        try:
+            return Wishlist.objects.get(pk=pk, owner=owner)
+        except Wishlist.DoesNotExist:
+            return NotFound
+    
+    def get_room(self, pk):
+        try:
+            return Room.objects.get(pk=pk)
+        except Room.DoesNotExist:
+            return NotFound
+
+    def put(self, request, pk, room_pk):
+        wishlist = self.get_list(pk, request.user)
+        room = self.get_room(pk=room_pk)
+        if wishlist.rooms.filter(pk=room.pk).exists():
+            wishlist.rooms.remove(room)
+        else:
+            wishlist.rooms.add(room)
+        return Response(status=status.HTTP_200_OK)

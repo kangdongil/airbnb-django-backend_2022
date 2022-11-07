@@ -47,6 +47,7 @@ CUSTOM_APPS = [
     'categories.apps.CategoriesConfig',
     'reviews.apps.ReviewsConfig',
     'medias.apps.MediasConfig',
+    'wishlists.apps.WishlistsConfig',
 ]
 THIRD_PARTY_APPS = [
     'rest_framework',

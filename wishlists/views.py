@@ -1,5 +1,7 @@
 from django.db import transaction
 from rest_framework.views import APIView
+from rest_framework import status
+from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import Wishlist
@@ -48,3 +50,58 @@ class WishlistList(APIView, ListPagination):
             return Response(serializer.data)
         else:
             return Response(serializer.errors)
+
+
+class WishlistDetail(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self, pk, owner):
+        try:
+            return Wishlist.objects.get(pk=pk, owner=owner)
+        except Wishlist.DoesNotExist:
+            return NotFound
+
+    def get(self, request, pk):
+        wishlist = self.get_object(pk, request.user)
+        serializer = WishlistSerializer(
+            wishlist,
+            context={"request": request},
+        )
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        wishlist = self.get_object(pk, request.user)
+        serializer = WishlistSerializer(
+            wishlist,
+            data=request.data,
+            partial=True,
+        )
+        if serializer.is_valid():
+            room_pks = request.data.get("rooms")
+            # experience_pks = request.data.get("experiences")
+            try:
+                with transaction.atomic():
+                    updated_wishlist = serializer.save()
+                    updated_wishlist.rooms.clear()
+                    # updated_wishlist.experiences.clear()
+                    for room_pk in room_pks:
+                        room = Room.objects.get(pk=room_pk)
+                        updated_wishlist.rooms.add(room)
+            except Room.DoesNotExist:
+                raise ParseError("Room Not Found")
+            except Exception as e:
+                raise ParseError(e)
+                
+            serializer = WishlistSerializer(
+                updated_wishlist,
+                context={"request": request},
+            )
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors)
+
+    def delete(self, request, pk):
+        wishlist = self.get_object(pk, request.user)
+        wishlist.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

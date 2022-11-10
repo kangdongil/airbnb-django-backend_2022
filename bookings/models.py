@@ -50,12 +50,3 @@ class Booking(TimeStampedModel):
 
     def __str__(self):
         return f"{self.kind.title()} booking for: {self.user}"
-    
-    def event(booking):
-        if booking.room:
-            return f"room: {booking.room}"
-        elif booking.experience:
-            return f"experience: {booking.experience}"
-        else:
-            return None
-        

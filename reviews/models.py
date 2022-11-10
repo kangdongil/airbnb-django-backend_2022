@@ -27,13 +27,16 @@ class Review(TimeStampedModel):
     payload = models.TextField(null=True, blank=True)
     rating = models.PositiveIntegerField()
 
+
+    @property
     def category(review):
         if review.room and not review.experience:
             return "Room"
         elif not review.room and review.experience:
             return "Experience"
 
-    def target_name(review):
+    @property
+    def event_name(review):
         if review.room and not review.experience:
             return f"{review.room}"
         elif not review.room and review.experience:

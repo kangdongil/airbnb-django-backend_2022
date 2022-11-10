@@ -1,14 +1,13 @@
 from collections import OrderedDict
 from django.core.paginator import Paginator
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.utils.urls import replace_query_param
 
-class ListPagination(PageNumberPagination):
+
+class ListPagination:
 
     page_query_param = "page"
     page_size_query_param = "per_page"
     page_size = 5
-    max_page_size = 10000
 
 
     def get_page_number(self, request):

@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound, PermissionDenied, ParseError
@@ -10,6 +11,9 @@ from common.paginations import ListPagination
 from categories.models import Category
 from reviews.serializers import ReviewSerializer
 from medias.serializers import PhotoSerializer
+from bookings.models import Booking
+from bookings.serializers import PublicBookingSerializer
+
 
 class AmenityList(APIView, ListPagination):
 
@@ -244,6 +248,32 @@ class RoomAmenities(APIView, ListPagination):
             "page": self.paginated_info(),
             "content": serializer.data,
         })
+
+
+class RoomBookings(APIView):
+
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_object(self, pk):
+        try:
+            return Room.objects.get(pk=pk)
+        except Room.DoesNotExist:
+            raise NotFound
+
+    def get(self, request, pk):
+        room = self.get_object(pk)
+        now = timezone.localtime(timezone.now()).date()
+        bookings = Booking.objects.filter(
+            room=room,
+            kind=Booking.BookingKindChoices.ROOM,
+            check_in__gte=now,
+        )
+        serializer = PublicBookingSerializer(
+            bookings,
+            many=True,
+        )
+        return Response(serializer.data)
+
 
 class RoomPhotos(APIView, ListPagination):
 

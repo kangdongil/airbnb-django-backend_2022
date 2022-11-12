@@ -26,6 +26,12 @@ class Review(TimeStampedModel):
     )
     payload = models.TextField(null=True, blank=True)
     rating = models.PositiveIntegerField()
+    booking = models.OneToOneField(
+        "bookings.Booking",
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="review",
+    )
 
 
     @property

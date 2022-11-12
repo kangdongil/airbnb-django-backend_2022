@@ -948,8 +948,12 @@ class Model(TimeStampedModel):
 [x] Host Reviews
 
 ## DatePaginatedBooking Code Challenge
-[ ] MonthlyBookingPagination
-[ ] Booking State(PENDING/CANCELLED/CONFIRMED/FINISHED)
-[ ] Owner's Approval(CONFIRMED/DENIED)
-[ ] PrivateBookingSerializer
-[ ] ReviewPerBooking
+[x] MonthlyBookingPagination
+  - `api/v1/rooms/5/bookings?booking_date=2022-11`
+[x] Booking State(PENDING/CANCELLED/CONFIRMED/FINISHED)
+[x] Owner's Approval(CONFIRMED/DENIED)
+[x] PrivateBookingSerializer
+  - Booking State
+  - host_can_view_past_bookings(`?active`)
+  - Guest Info
+[x] ReviewPerBooking

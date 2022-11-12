@@ -1,5 +1,9 @@
 from collections import OrderedDict
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+from django.utils import timezone
 from django.core.paginator import Paginator
+from django.db.models import Q
 from rest_framework.utils.urls import replace_query_param
 
 
@@ -63,6 +67,74 @@ class ListPagination:
             ('active', self.page.number),
             ('pages', self.page.paginator.num_pages),
             ('count', self.page.paginator.count),
+            ('previous_link', self.get_previous_link()),
+            ('next_link', self.get_next_link()),
+        ])
+
+
+class MonthlyBookingPagination:
+
+    booking_date_query_param = "booking_date"
+
+    def get_booking_date(self, request):
+        now = timezone.localtime(timezone.now()).date()
+        param_value = request.query_params.get(
+            self.booking_date_query_param,
+            None,
+        )
+        try:
+            booking_date = datetime.strptime(
+                param_value, "%Y-%m"
+            )
+        except (TypeError, ValueError):
+            booking_date = now.replace(day=1)
+        self.booking_date = booking_date
+        return booking_date
+
+    def paginate(self, queryset, request):
+        booking_date = self.get_booking_date(request)
+        paginated_queryset = queryset.filter(
+            (
+                Q(check_in__lt=booking_date) |
+                Q(check_in__month=booking_date.month)
+            ) &
+            Q(check_out__gte=booking_date)
+        )
+        self.total_data = paginated_queryset.count()
+        return list(paginated_queryset)
+
+    def get_previous_link(self):
+        url = self.request.build_absolute_uri()
+        previous_month = datetime.strftime(
+            self.booking_date + relativedelta(months=-1),
+            "%Y-%m",
+        )
+        return replace_query_param(
+            url,
+            self.booking_date_query_param,
+            previous_month,
+        )
+
+    def get_next_link(self):
+        url = self.request.build_absolute_uri()
+        next_month = datetime.strftime(
+            self.booking_date + relativedelta(months=1),
+            "%Y-%m",
+        )
+        return replace_query_param(
+            url,
+            self.booking_date_query_param,
+            next_month,
+        )
+
+    @property
+    def paginated_info(self):
+        active_page = datetime.strftime(
+            self.booking_date, "%Y-%m"
+        )
+        return OrderedDict([
+            ('active', active_page),
+            ('count', self.total_data),
             ('previous_link', self.get_previous_link()),
             ('next_link', self.get_next_link()),
         ])

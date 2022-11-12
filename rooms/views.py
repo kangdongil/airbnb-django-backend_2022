@@ -7,12 +7,12 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from rest_framework import status
 from .models import Room, Amenity
 from .serializers import RoomListSerializer, RoomDetailSerializer, AmenitySerializer
-from common.paginations import ListPagination
+from common.paginations import ListPagination, MonthlyBookingPagination
 from categories.models import Category
 from reviews.serializers import ReviewSerializer
 from medias.serializers import PhotoSerializer
 from bookings.models import Booking
-from bookings.serializers import PublicBookingSerializer, CreateRoomBookingSerializer
+from bookings.serializers import PublicBookingSerializer, CreateRoomBookingSerializer, PrivateBookingSerializer, CreateRoomBookingSerializer
 
 
 class AmenityList(APIView, ListPagination):
@@ -250,7 +250,7 @@ class RoomAmenities(APIView, ListPagination):
         })
 
 
-class RoomBookings(APIView):
+class RoomBookings(APIView, MonthlyBookingPagination):
 
     permission_classes = [IsAuthenticatedOrReadOnly]
 
@@ -263,16 +263,39 @@ class RoomBookings(APIView):
     def get(self, request, pk):
         room = self.get_object(pk)
         now = timezone.localtime(timezone.now()).date()
-        bookings = Booking.objects.filter(
-            room=room,
-            kind=Booking.BookingKindChoices.ROOM,
-            check_in__gte=now,
-        )
-        serializer = PublicBookingSerializer(
-            bookings,
-            many=True,
-        )
-        return Response(serializer.data)
+        is_active = request.query_params.get("active", None)
+        if request.user == room.owner:
+            if is_active == "true":
+                bookings = Booking.objects.filter(
+                    room=room,
+                    kind=Booking.BookingKindChoices.ROOM,
+                    check_in__gte=now,
+                )
+            else:
+                bookings = Booking.objects.filter(
+                    room=room,
+                    kind=Booking.BookingKindChoices.ROOM,
+                )
+            serializer = PrivateBookingSerializer(
+                self.paginate(bookings, request),
+                many=True,
+            )
+        else:
+            if is_active:
+                raise PermissionDenied
+            bookings = Booking.objects.filter(
+                room=room,
+                kind=Booking.BookingKindChoices.ROOM,
+                check_in__gte=now,
+            )
+            serializer = PublicBookingSerializer(
+                self.paginate(bookings, request),
+                many=True,
+            )
+        return Response({
+            "page": self.paginated_info,
+            "content": serializer.data,
+        })
     
     def post(self, request, pk):
         room = self.get_object(pk)

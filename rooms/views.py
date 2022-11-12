@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound, PermissionDenied, ParseError
@@ -6,10 +7,13 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from rest_framework import status
 from .models import Room, Amenity
 from .serializers import RoomListSerializer, RoomDetailSerializer, AmenitySerializer
-from common.paginations import ListPagination
+from common.paginations import ListPagination, MonthlyBookingPagination
 from categories.models import Category
 from reviews.serializers import ReviewSerializer
 from medias.serializers import PhotoSerializer
+from bookings.models import Booking
+from bookings.serializers import PublicBookingSerializer, CreateRoomBookingSerializer, PrivateBookingSerializer, CreateRoomBookingSerializer
+
 
 class AmenityList(APIView, ListPagination):
 
@@ -244,6 +248,69 @@ class RoomAmenities(APIView, ListPagination):
             "page": self.paginated_info(),
             "content": serializer.data,
         })
+
+
+class RoomBookings(APIView, MonthlyBookingPagination):
+
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_object(self, pk):
+        try:
+            return Room.objects.get(pk=pk)
+        except Room.DoesNotExist:
+            raise NotFound
+
+    def get(self, request, pk):
+        room = self.get_object(pk)
+        now = timezone.localtime(timezone.now()).date()
+        is_active = request.query_params.get("active", None)
+        if request.user == room.owner:
+            if is_active == "true":
+                bookings = Booking.objects.filter(
+                    room=room,
+                    kind=Booking.BookingKindChoices.ROOM,
+                    check_in__gte=now,
+                )
+            else:
+                bookings = Booking.objects.filter(
+                    room=room,
+                    kind=Booking.BookingKindChoices.ROOM,
+                )
+            serializer = PrivateBookingSerializer(
+                self.paginate(bookings, request),
+                many=True,
+            )
+        else:
+            if is_active:
+                raise PermissionDenied
+            bookings = Booking.objects.filter(
+                room=room,
+                kind=Booking.BookingKindChoices.ROOM,
+                check_in__gte=now,
+            )
+            serializer = PublicBookingSerializer(
+                self.paginate(bookings, request),
+                many=True,
+            )
+        return Response({
+            "page": self.paginated_info,
+            "content": serializer.data,
+        })
+    
+    def post(self, request, pk):
+        room = self.get_object(pk)
+        serializer = CreateRoomBookingSerializer(data=request.data)
+        if serializer.is_valid():
+            new_booking = serializer.save(
+                room=room,
+                user=request.user,
+                kind=Booking.BookingKindChoices.ROOM,
+            )
+            serializer = PublicBookingSerializer(new_booking)
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors)
+
 
 class RoomPhotos(APIView, ListPagination):
 

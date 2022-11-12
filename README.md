@@ -946,3 +946,14 @@ class Model(TimeStampedModel):
 [x] if is_host:
 [x] User's Rooms
 [x] Host Reviews
+
+## DatePaginatedBooking Code Challenge
+[x] MonthlyBookingPagination
+  - `api/v1/rooms/5/bookings?booking_date=2022-11`
+[x] Booking State(PENDING/CANCELLED/CONFIRMED/FINISHED)
+[x] Owner's Approval(CONFIRMED/DENIED)
+[x] PrivateBookingSerializer
+  - Booking State
+  - host_can_view_past_bookings(`?active`)
+  - Guest Info
+[x] ReviewPerBooking

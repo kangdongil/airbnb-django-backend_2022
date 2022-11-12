@@ -957,3 +957,14 @@ class Model(TimeStampedModel):
   - host_can_view_past_bookings(`?active`)
   - Guest Info
 [x] ReviewPerBooking
+
+## Experience Code Challenge
+[ ] ExperienceList / ExperienceDetail
+[ ] PerkList / PerkDetail / ExperiencePerks
+[ ] ExperienceBookings
+[ ] ExperienceReviews
+[ ] UserExperiences
+[ ] ExperienceInWishlist
+[ ] ExperiencePhotos
+[ ] ThumbnailPhotoSelect
+[ ] VideoDetail & OneToOneField

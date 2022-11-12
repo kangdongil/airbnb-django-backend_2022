@@ -22,7 +22,7 @@ class WishlistList(APIView, ListPagination):
             context={"request": request},
         )
         return Response({
-            "page": self.paginated_info(),
+            "page": self.paginated_info,
             "content": serializer.data,
         })
     
@@ -30,7 +30,6 @@ class WishlistList(APIView, ListPagination):
         serializer = WishlistSerializer(data=request.data)
         if serializer.is_valid():
             room_pks = request.data.get("rooms")
-            # experience_pks = request.data.get("experiences")
             try:
                 with transaction.atomic():
                     new_wishlist = serializer.save(
@@ -49,7 +48,10 @@ class WishlistList(APIView, ListPagination):
                 context={"request": request})
             return Response(serializer.data)
         else:
-            return Response(serializer.errors)
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class WishlistDetail(APIView):
@@ -60,7 +62,7 @@ class WishlistDetail(APIView):
         try:
             return Wishlist.objects.get(pk=pk, owner=owner)
         except Wishlist.DoesNotExist:
-            return NotFound
+            raise NotFound
 
     def get(self, request, pk):
         wishlist = self.get_object(pk, request.user)
@@ -79,12 +81,10 @@ class WishlistDetail(APIView):
         )
         if serializer.is_valid():
             room_pks = request.data.get("rooms")
-            # experience_pks = request.data.get("experiences")
             try:
                 with transaction.atomic():
                     updated_wishlist = serializer.save()
                     updated_wishlist.rooms.clear()
-                    # updated_wishlist.experiences.clear()
                     for room_pk in room_pks:
                         room = Room.objects.get(pk=room_pk)
                         updated_wishlist.rooms.add(room)
@@ -99,7 +99,10 @@ class WishlistDetail(APIView):
             )
             return Response(serializer.data)
         else:
-            return Response(serializer.errors)
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
     def delete(self, request, pk):
         wishlist = self.get_object(pk, request.user)
@@ -107,19 +110,19 @@ class WishlistDetail(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class WishlistToggle(APIView):
+class WishlistRoomToggle(APIView):
 
     def get_list(self, pk, owner):
         try:
             return Wishlist.objects.get(pk=pk, owner=owner)
         except Wishlist.DoesNotExist:
-            return NotFound
+            raise NotFound
     
     def get_room(self, pk):
         try:
             return Room.objects.get(pk=pk)
         except Room.DoesNotExist:
-            return NotFound
+            raise NotFound
 
     def put(self, request, pk, room_pk):
         wishlist = self.get_list(pk, request.user)

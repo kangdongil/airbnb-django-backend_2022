@@ -4,6 +4,7 @@ from common.serializers import TinyUserSerializer
 from common.serializers import TinyRoomSerializer
 from bookings.serializers import PublicBookingSerializer
 
+
 class UserReviewSerializer(ModelSerializer):
     
     class Meta:
@@ -13,6 +14,7 @@ class UserReviewSerializer(ModelSerializer):
             "rating",
             "created_at",
         )
+
 
 class HostReviewSerializer(ModelSerializer):
     
@@ -28,6 +30,7 @@ class HostReviewSerializer(ModelSerializer):
             "rating",
             "created_at",
         )
+
 
 class ReviewSerializer(ModelSerializer):
     

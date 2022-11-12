@@ -23,7 +23,6 @@ class HostRoomSerializer(ModelSerializer):
         fields=(
             "pk",
             "name",
-            #"preview_photo",
             "kind",
             "rating",
             "total_reviews",

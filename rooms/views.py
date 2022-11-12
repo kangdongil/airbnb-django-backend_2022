@@ -26,7 +26,7 @@ class AmenityList(APIView, ListPagination):
             many=True,
         )
         return Response({
-            "page": self.paginated_info(),
+            "page": self.paginated_info,
             "content": serializer.data,
         })
     
@@ -39,7 +39,10 @@ class AmenityList(APIView, ListPagination):
             serializer = AmenitySerializer(new_amenity)
             return Response(serializer.data)
         else:
-            return Response(serializer.errors)
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class AmenityDetail(APIView):
@@ -69,7 +72,10 @@ class AmenityDetail(APIView):
             serializer = AmenitySerializer(updated_amenity)
             return Response(serializer.data)
         else:
-            return Response(serializer.errors)
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
     def delete(self, request, pk):
         amenity = self.get_object(pk)
@@ -89,7 +95,7 @@ class RoomList(APIView, ListPagination):
             context={"request": request},
         )
         return Response({
-            "page": self.paginated_info(),
+            "page": self.paginated_info,
             "content": serializer.data,
         })
     
@@ -123,7 +129,10 @@ class RoomList(APIView, ListPagination):
             serializer = RoomDetailSerializer(new_rooms)
             return Response(serializer.data)
         else:
-            return Response(serializer.errors)
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class RoomDetail(APIView):
@@ -211,7 +220,7 @@ class RoomReviews(APIView, ListPagination):
             many=True,
         )
         return Response({
-            "page": self.paginated_info(),
+            "page": self.paginated_info,
             "content": serializer.data,
         })
     
@@ -245,7 +254,7 @@ class RoomAmenities(APIView, ListPagination):
             many=True,
         )
         return Response({
-            "page": self.paginated_info(),
+            "page": self.paginated_info,
             "content": serializer.data,
         })
 
@@ -309,7 +318,10 @@ class RoomBookings(APIView, MonthlyBookingPagination):
             serializer = PublicBookingSerializer(new_booking)
             return Response(serializer.data)
         else:
-            return Response(serializer.errors)
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class RoomPhotos(APIView, ListPagination):
@@ -341,4 +353,7 @@ class RoomPhotos(APIView, ListPagination):
             serializer = PhotoSerializer(photo)
             return Response(serializer.data)
         else:
-            return Response(serializer.errors)
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )

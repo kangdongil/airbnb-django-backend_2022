@@ -44,7 +44,7 @@ class CreateReviewPerBooking(APIView):
             review = Review.objects.filter(booking=booking_pk).first()
             return review
         except Review.DoesNotExist:
-            raise None
+            return
     
     def post(self, request, pk):
         now = timezone.localtime(timezone.now()).date()
@@ -69,7 +69,10 @@ class CreateReviewPerBooking(APIView):
             serializer = ReviewSerializer(new_review)
             return Response(serializer.data)
         else:
-            return Response(serializer.errors)
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
     
     def put(self,request, pk):
         now = timezone.localtime(timezone.now()).date()
@@ -94,4 +97,7 @@ class CreateReviewPerBooking(APIView):
             serializer = ReviewSerializer(updated_review)
             return Response(serializer.data)
         else:
-            return Response(serializer.errors)
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )

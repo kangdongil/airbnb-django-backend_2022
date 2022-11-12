@@ -34,7 +34,10 @@ class MyProfile(APIView):
             serializer = PrivateUserSerializer(updated_user)
             return Response(serializer.data)
         else:
-            return Response(serializer.errors)
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class PublicProfile(APIView):
@@ -63,7 +66,7 @@ class UserReviews(APIView, ListPagination):
             many=True,
         )
         return Response({
-            "page": self.paginated_info(),
+            "page": self.paginated_info,
             "content": serializer.data,
         })
 
@@ -107,7 +110,7 @@ class HostReviews(APIView, ListPagination):
             many=True,
         )
         return Response({
-            "page": self.paginated_info(),
+            "page": self.paginated_info,
             "content": serializer.data,
         })
 
@@ -128,7 +131,10 @@ class CreateAccount(APIView):
             serializer = PrivateUserSerializer(new_user)
             return Response(serializer.data)
         else:
-            return Response(serializer.errors)
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class ChangePassword(APIView):

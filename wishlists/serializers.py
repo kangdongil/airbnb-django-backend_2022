@@ -16,5 +16,4 @@ class WishlistSerializer(ModelSerializer):
             "pk",
             "name",
             "rooms",
-            #"experiences",
         )

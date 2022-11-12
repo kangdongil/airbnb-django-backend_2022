@@ -62,6 +62,7 @@ class ListPagination:
             page_number
         )
     
+    @property
     def paginated_info(self):
         return OrderedDict([
             ('active', self.page.number),

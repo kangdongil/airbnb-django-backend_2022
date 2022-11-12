@@ -2,7 +2,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from rest_framework.status import HTTP_204_NO_CONTENT
+from rest_framework import status
 from .models import Category
 from .serializers import CategorySerializer
 from common.paginations import ListPagination
@@ -18,7 +18,7 @@ class CategoryList(APIView, ListPagination):
             many=True,
         )
         return Response({
-            "page": self.paginated_info(),
+            "page": self.paginated_info,
             "content": serializer.data,
         })
     
@@ -29,7 +29,10 @@ class CategoryList(APIView, ListPagination):
             serializer = CategorySerializer(new_category)
             return Response(serializer.data)
         else:
-            return Response(serializer.errors)
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class CategoryDetail(APIView):
@@ -58,7 +61,10 @@ class CategoryDetail(APIView):
             serializer = CategorySerializer(updated_category)
             return Response(serializer.data)
         else:
-            return Response(serializer.errors)
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
     def delete(self, request, pk):
         self.get_object(pk).delete()

@@ -11,7 +11,7 @@ from common.paginations import ListPagination, MonthlyBookingPagination
 from categories.models import Category
 from bookings.models import Booking
 from bookings.serializers import PublicBookingSerializer, PrivateBookingSerializer, CreateExperienceBookingSerializer
-
+from reviews.serializers import ReviewSerializer
 
 class PerkList(APIView, ListPagination):
     
@@ -289,3 +289,24 @@ class ExperienceBookings(APIView, MonthlyBookingPagination):
                 serializer.errors,
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+
+class ExperienceReviews(APIView, ListPagination):
+
+    def get_object(self, pk):
+        try:
+            return Experience.objects.get(pk=pk)
+        except Experience.DoesNotExist:
+            raise NotFound
+    
+    def get(self, request, pk):
+        experience = self.get_object(pk)
+        reviews = experience.reviews.all()
+        serializer = ReviewSerializer(
+            self.paginate(reviews, request),
+            many=True,
+        )
+        return Response({
+            "page": self.paginated_info,
+            "content": serializer.data,
+        })

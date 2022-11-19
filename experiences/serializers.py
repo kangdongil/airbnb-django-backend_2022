@@ -2,6 +2,7 @@ from rest_framework.serializers import ModelSerializer, SerializerMethodField
 from .models import Experience, Perk
 from common.serializers import TinyUserSerializer
 from categories.serializers import CategorySerializer
+from reviews.serializers import ReviewSerializer
 
 
 class PerkSerializer(ModelSerializer):
@@ -43,7 +44,10 @@ class ExperienceDetailSerializer(ModelSerializer):
         read_only=True,
         many=True,
     )
-    # reviews
+    reviews = ReviewSerializer(
+        read_only=True,
+        many=True,
+    )
     # photos
     # video
     rating = SerializerMethodField()
@@ -67,6 +71,7 @@ class ExperienceDetailSerializer(ModelSerializer):
             "host",
             "category",
             "perks",
+            "reviews",
             "created_at",
             "updated_at",
         )

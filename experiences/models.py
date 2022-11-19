@@ -33,6 +33,20 @@ class Experience(TimeStampedModel):
         blank=True,
     )
 
+    @property
+    def total_reviews(experience):
+        return experience.reviews.count()
+
+    def average_ratings(experience):
+        reviews = experience.reviews.count()
+        if reviews == 0:
+            return 0
+        else:
+            total_ratings = 0
+            for review in experience.reviews.all().values("rating"):
+                total_ratings += review["rating"]
+            return round(total_ratings / reviews, 2)
+
     def __str__(self):
         return self.name
 

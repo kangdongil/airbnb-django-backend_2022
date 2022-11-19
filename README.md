@@ -959,7 +959,7 @@ class Model(TimeStampedModel):
 [x] ReviewPerBooking
 
 ## Experience Code Challenge
-[ ] ExperienceList / ExperienceDetail
+[x] ExperienceList / ExperienceDetail
 [ ] PerkList / PerkDetail / ExperiencePerks
 [ ] ExperienceBookings
 [ ] ExperienceReviews

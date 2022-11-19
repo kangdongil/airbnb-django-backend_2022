@@ -96,10 +96,14 @@ class MonthlyBookingPagination:
         booking_date = self.get_booking_date(request)
         paginated_queryset = queryset.filter(
             (
-                Q(check_in__lt=booking_date) |
-                Q(check_in__month=booking_date.month)
-            ) &
-            Q(check_out__gte=booking_date)
+                (
+                    Q(check_in__lt=booking_date) |
+                    Q(check_in__month=booking_date.month)
+                ) &
+                Q(check_out__gte=booking_date)
+            ) | (
+                Q(experience_time__month = booking_date.month)
+            )
         )
         self.total_data = paginated_queryset.count()
         return list(paginated_queryset)

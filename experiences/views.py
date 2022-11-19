@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.exceptions import NotFound, PermissionDenied, ParseError
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -6,8 +7,10 @@ from rest_framework import status
 from rest_framework.response import Response
 from .models import Experience, Perk
 from .serializers import ExperienceListSerializer, ExperienceDetailSerializer, PerkSerializer
-from common.paginations import ListPagination
+from common.paginations import ListPagination, MonthlyBookingPagination
 from categories.models import Category
+from bookings.models import Booking
+from bookings.serializers import PublicBookingSerializer, PrivateBookingSerializer, CreateExperienceBookingSerializer
 
 
 class PerkList(APIView, ListPagination):
@@ -218,3 +221,71 @@ class ExperiencePerks(APIView, ListPagination):
             "page": self.paginated_info,
             "content": serializer.data,
         })
+
+
+class ExperienceBookings(APIView, MonthlyBookingPagination):
+
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_object(self, pk):
+        try:
+            return Experience.objects.get(pk=pk)
+        except Experience.DoesNotExist:
+            raise NotFound
+    
+    def get(self, request, pk):
+        experience = self.get_object(pk)
+        now = timezone.localtime(timezone.now()).date()
+        is_active = request.query_params.get("active", None)
+        if request.user == experience.host:
+            if is_active == "true":
+                bookings = Booking.objects.filter(
+                    experience=experience,
+                    kind=Booking.BookingKindChoices.EXPERIENCE,
+                    experience_time__gte=now,
+                )
+            else:
+                bookings = Booking.objects.filter(
+                    experience=experience,
+                    kind=Booking.BookingKindChoices.EXPERIENCE,
+                )
+            serializer = PrivateBookingSerializer(
+                self.paginate(bookings, request),
+                many=True,
+            )
+        else:
+            if is_active:
+                raise PermissionDenied
+            bookings = Booking.objects.filter(
+                experience=experience,
+                kind=Booking.BookingKindChoices.EXPERIENCE,
+                experience_time__gte=now,
+            )
+            serializer = PublicBookingSerializer(
+                self.paginate(bookings, request),
+                many=True,
+            )
+        return Response({
+            "page": self.paginated_info,
+            "content": serializer.data,
+        })
+
+    def post(self, request, pk):
+        experience = self.get_object(pk)
+        serializer = CreateExperienceBookingSerializer(
+            data=request.data,
+            context={"experience": experience},
+        )
+        if serializer.is_valid():
+            new_booking = serializer.save(
+                experience=experience,
+                user=request.user,
+                kind=Booking.BookingKindChoices.EXPERIENCE,
+            )
+            serializer = PublicBookingSerializer(new_booking)
+            return Response(serializer.data)
+        else:
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )

@@ -62,6 +62,7 @@ class ExperienceDetailSerializer(ModelSerializer):
             "price",
             "event_start",
             "event_end",
+            "event_duration",
             "is_host",
             "host",
             "category",

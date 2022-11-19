@@ -5,9 +5,74 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework import status
 from rest_framework.response import Response
 from .models import Experience, Perk
-from .serializers import ExperienceListSerializer, ExperienceDetailSerializer
+from .serializers import ExperienceListSerializer, ExperienceDetailSerializer, PerkSerializer
 from common.paginations import ListPagination
 from categories.models import Category
+
+
+class PerkList(APIView, ListPagination):
+    
+    def get(self, request):
+        all_perks = Perk.objects.all().order_by("-created_at")
+        serializer = PerkSerializer(
+            self.paginate(all_perks, request),
+            many=True,
+        )
+        return Resonse({
+            "page": self.paginated_info,
+            "content": serializer.data,
+        })
+
+    def post(self, request):
+        serializer = PerkSerializer(
+            data=request.data
+        )
+        if serializer.is_valid():
+            new_perk = serializer.save()
+            serializer = PerkSerializer(new_perk)
+            return Response(serializer.data)
+        else:
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+class PerkDetail(APIView):
+    
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_object(self, pk):
+        try:
+            return Perk.objects.get(pk=pk)
+        except Perk.DoesNotExist:
+            raise NotFound
+
+    def get(self, request, pk):
+        perk = self.get_object(pk)
+        serializer = PerkSerializer(perk)
+        return Response(serializer.data)
+    
+    def put(self, request, pk):
+        perk = self.get_object(pk)
+        serializer = PerkSerializer(
+            perk,
+            data=request.data,
+            partial=True,
+        )
+        if serializer.is_valid():
+            updated_perk = serializer.save()
+            serializer = PerkSerializer(updated_perk)
+            return Response(serializer.data)
+        else:
+            return Response(
+                serializer.errros,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+    
+    def delete(self, request, pk):
+        perk = self.get_object(pk)
+        perk.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ExperienceList(APIView, ListPagination):
@@ -132,3 +197,24 @@ class ExperienceDetail(APIView):
             raise PermissionDenied
         experience.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ExperiencePerks(APIView, ListPagination):
+
+    def get_object(self, pk):
+        try:
+            return Experience.objects.get(pk=pk)
+        except Experience.DoesNotExist:
+            raise NotFound
+    
+    def get(self, request, pk):
+        experience = self.get_object(pk)
+        perks = experience.perks.all()
+        serializer = PerkSerializer(
+            self.paginated(perks, request),
+            many=True,
+        )
+        return Response({
+            "page": self.paginated_info,
+            "content": serializer.data,
+        })

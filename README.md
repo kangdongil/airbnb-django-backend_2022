@@ -960,7 +960,7 @@ class Model(TimeStampedModel):
 
 ## Experience Code Challenge
 [x] ExperienceList / ExperienceDetail
-[ ] PerkList / PerkDetail / ExperiencePerks
+[x] PerkList / PerkDetail / ExperiencePerks
 [ ] ExperienceBookings
 [ ] ExperienceReviews
 [ ] UserExperiences

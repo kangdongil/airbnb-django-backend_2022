@@ -10,6 +10,8 @@ from .serializers import PrivateUserSerializer, PublicUserSerializer
 from common.paginations import ListPagination
 from rooms.models import Room
 from rooms.serializers import HostRoomSerializer
+from experiences.models import Experience
+from experiences.serializers import HostExperienceSerializer
 from reviews.models import Review
 from reviews.serializers import UserReviewSerializer, HostReviewSerializer
 
@@ -93,7 +95,7 @@ class HostRooms(APIView, ListPagination):
         })
 
 
-class HostReviews(APIView, ListPagination):
+class HostRoomReviews(APIView, ListPagination):
     def get_object(self, username):
         try:
             return User.objects.get(username=username)
@@ -113,6 +115,52 @@ class HostReviews(APIView, ListPagination):
             "page": self.paginated_info,
             "content": serializer.data,
         })
+
+
+class HostExperiences(APIView, ListPagination):
+    def get_object(self, username):
+        try:
+            return User.objects.get(username=username)
+        except User.DoesNotExist:
+            raise NotFound
+
+    def get(self, request, username):
+        host = self.get_object(username)
+        print(host.is_host)
+        if host.is_host != True:
+            raise ParseError("This user is not a host.")
+        experiences = Experience.objects.filter(host=host).order_by("-created_at")
+        serializer = HostExperienceSerializer(
+            self.paginate(experiences, request),
+            many=True,
+        )
+        return Response({
+            "page": self.paginated_info,
+            "content": serializer.data,
+        })
+
+
+class HostExperienceReviews(APIView, ListPagination):
+    def get_object(self, username):
+        try:
+            return User.objects.get(username=username)
+        except User.DoesNotExist:
+            raise NotFound
+    
+    def get(self, request, username):
+        host = self.get_object(username)
+        if host.is_host != True:
+            raise ParseError("This user is not a host.")
+        reviews = Review.objects.filter(experience__host=host).order_by("-created_at")
+        serializer = HostReviewSerializer(
+            self.paginate(reviews, request),
+            many=True,
+        )
+        return Response({
+            "page": self.paginated_info,
+            "content": serializer.data,
+        })
+
 
 class CreateAccount(APIView):
     def post(self, request):

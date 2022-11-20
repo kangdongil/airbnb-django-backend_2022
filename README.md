@@ -963,7 +963,7 @@ class Model(TimeStampedModel):
 [x] PerkList / PerkDetail / ExperiencePerks
 [x] ExperienceBookings
 [x] ExperienceReviews
-[ ] UserExperiences
+[x] UserExperiences
 [ ] ExperienceInWishlist
 [ ] ExperiencePhotos
 [ ] ThumbnailPhotoSelect

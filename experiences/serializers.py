@@ -11,6 +11,27 @@ class PerkSerializer(ModelSerializer):
         fields = "__all__"
 
 
+class HostExperienceSerializer(ModelSerializer):
+
+    rating = SerializerMethodField()
+    total_reviews = SerializerMethodField()
+
+    class Meta:
+        model=Experience
+        fields=(
+            "pk",
+            "name",
+            "rating",
+            "total_reviews",
+        )
+    
+    def get_rating(self, experience):
+        return experience.average_ratings()
+    
+    def get_total_reviews(self, experience):
+        return experience.total_reviews
+
+
 class ExperienceListSerializer(ModelSerializer):
 
     rating = SerializerMethodField()

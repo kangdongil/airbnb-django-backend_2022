@@ -5,7 +5,8 @@ from reviews.models import Review
 from reviews.serializers import UserReviewSerializer, HostReviewSerializer
 from rooms.models import Room
 from rooms.serializers import HostRoomSerializer
-
+from experiences.models import Experience
+from experiences.serializers import HostExperienceSerializer
 
 class PrivateUserSerializer(ModelSerializer):
     class Meta:
@@ -41,6 +42,7 @@ class PublicUserSerializer(ModelSerializer):
 
     reviews = SerializerMethodField()
     rooms = SerializerMethodField()
+    experiences = SerializerMethodField()
     host_reviews = SerializerMethodField()
 
     class Meta:
@@ -55,6 +57,7 @@ class PublicUserSerializer(ModelSerializer):
             "reviews",
             "is_host",
             "rooms",
+            "experiences",
             "host_reviews",
             "gender",
             "language",
@@ -75,6 +78,16 @@ class PublicUserSerializer(ModelSerializer):
         owned_rooms = Room.objects.filter(owner=owner)\
             .annotate(**query_exp).order_by(*ordering)[:10]
         return HostRoomSerializer(owned_rooms, many=True).data
+
+    def get_experiences(self, host):
+        query_exp = {
+            "cnt_reviews": Count("reviews"),
+            "avg_ratings": Avg("reviews__rating"),
+        }
+        ordering = ["-cnt_reviews", "-avg_ratings"]
+        hosted_experiences = Experience.objects.filter(host=host)\
+            .annotate(**query_exp).order_by(*ordering)[:10]
+        return HostExperienceSerializer(hosted_experiences, many=True).data
 
     def get_host_reviews(self, owner):
         reviews = Review.objects.filter(room__owner=owner)[:10]

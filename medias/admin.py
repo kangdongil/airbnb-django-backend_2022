@@ -17,4 +17,8 @@ class PhotoAdmin(admin.ModelAdmin):
 
 @admin.register(Video)
 class VideoAdmin(admin.ModelAdmin):
-    pass
+    
+    list_display = (
+        "__str__",
+        "experience",
+    )

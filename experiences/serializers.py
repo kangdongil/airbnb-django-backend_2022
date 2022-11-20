@@ -5,7 +5,7 @@ from wishlists.models import Wishlist
 from medias.models import Photo
 from categories.serializers import CategorySerializer
 from reviews.serializers import ReviewSerializer
-from medias.serializers import PhotoSerializer
+from medias.serializers import PhotoSerializer, VideoSerializer
 
 class PerkSerializer(ModelSerializer):
     class Meta:
@@ -73,9 +73,13 @@ class HostExperienceSerializer(ModelSerializer):
 
 class ExperienceListSerializer(ModelSerializer):
 
+    
     photos = PhotoSerializer(
         read_only=True,
         many=True,
+    )
+    video = VideoSerializer(
+        read_only=True,
     )
     rating = SerializerMethodField()
     is_owner = SerializerMethodField()
@@ -87,6 +91,7 @@ class ExperienceListSerializer(ModelSerializer):
             "pk",
             "name",
             "photos",
+            "video",
             "country",
             "city",
             "price",
@@ -126,7 +131,9 @@ class ExperienceDetailSerializer(ModelSerializer):
         read_only=True,
         many=True,
     )
-    # video
+    video = VideoSerializer(
+        read_only=True,
+    )
     rating = SerializerMethodField()
     is_host = SerializerMethodField()
     is_liked = SerializerMethodField()
@@ -150,6 +157,7 @@ class ExperienceDetailSerializer(ModelSerializer):
             "host",
             "category",
             "photos",
+            "video",
             "perks",
             "reviews",
             "created_at",

@@ -967,4 +967,4 @@ class Model(TimeStampedModel):
 [x] ExperienceInWishlist
 [x] ExperiencePhotos
 [x] ThumbnailPhotoSelect
-[ ] VideoDetail & OneToOneField
+[x] VideoDetail & OneToOneField

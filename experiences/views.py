@@ -11,10 +11,10 @@ from common.paginations import ListPagination, MonthlyBookingPagination
 from categories.models import Category
 from bookings.models import Booking
 from experiences.models import Experience
-from medias.models import Photo
+from medias.models import Photo, Video
 from bookings.serializers import PublicBookingSerializer, PrivateBookingSerializer, CreateExperienceBookingSerializer
 from reviews.serializers import ReviewSerializer
-from medias.serializers import PhotoSerializer
+from medias.serializers import PhotoSerializer, VideoSerializer
 
 class PerkList(APIView, ListPagination):
     
@@ -382,3 +382,45 @@ class ExperienceThumbnailPhotoSelect(APIView):
         photo.is_thumbnail = True
         photo.save()
         return Response(status=status.HTTP_200_OK)
+
+
+class ExperienceVideo(APIView):
+
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_object(self, pk):
+        try:
+            return Experience.objects.get(pk=pk)
+        except Experience.DoesNotExist:
+            raise NotFound
+
+    def get_experience_video(self, experience_pk):
+        try:
+            video = Video.objects.filter(experience=experience_pk).first()
+            return video
+        except Video.DoesNotExist:
+            return
+
+    def get(self, request, pk):
+        experience = self.get_object(pk)
+        if not self.get_experience_video(pk):
+            return Response(status=status.HTTP_200_OK)
+        serializer = VideoSerializer(experience.video)
+        return Response(serializer.data)
+
+    def post(self, request, pk):
+        experience = self.get_object(pk)
+        if request.user != experience.host:
+            raise PermissionDenied
+        serializer = VideoSerializer(data=request.data)
+        if serializer.is_valid():
+            if self.get_experience_video(pk):
+                raise ParseError("Video with this Experience already exists.")
+            video = serializer.save(experience=experience)
+            serializer = VideoSerializer(video)
+            return Response(serializer.data)
+        else:
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )

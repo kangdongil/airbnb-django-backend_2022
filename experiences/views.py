@@ -2,7 +2,7 @@ from django.db import transaction
 from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.exceptions import NotFound, PermissionDenied, ParseError
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework import status
 from rest_framework.response import Response
 from .models import Experience, Perk
@@ -11,8 +11,10 @@ from common.paginations import ListPagination, MonthlyBookingPagination
 from categories.models import Category
 from bookings.models import Booking
 from experiences.models import Experience
+from medias.models import Photo
 from bookings.serializers import PublicBookingSerializer, PrivateBookingSerializer, CreateExperienceBookingSerializer
 from reviews.serializers import ReviewSerializer
+from medias.serializers import PhotoSerializer
 
 class PerkList(APIView, ListPagination):
     
@@ -311,3 +313,72 @@ class ExperienceReviews(APIView, ListPagination):
             "page": self.paginated_info,
             "content": serializer.data,
         })
+
+
+class ExperiencePhotos(APIView, ListPagination):
+
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_object(self, pk):
+        try:
+            return Experience.objects.get(pk=pk)
+        except Experience.DoesNotExist:
+            raise NotFound
+
+    def get(self, request, pk):
+        experience = self.get_object(pk)
+        photos = experience.photos.all()
+        serializer = PhotoSerializer(
+            self.paginate(photos,request),
+            many=True,
+        )
+        return Response(serializer.data)
+    
+    def post(self, request, pk):
+        experience = self.get_object(pk)
+        if request.user != experience.host:
+            raise PermissionDenied
+        serializer = PhotoSerializer(data=request.data)
+        if serializer.is_valid():
+            photo = serializer.save(experience=experience)
+            serializer = PhotoSerializer(photo)
+            return Response(serializer.data)
+        else:
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+class ExperienceThumbnailPhotoSelect(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def get_experience(self, pk):
+        try:
+            return Experience.objects.get(pk=pk)
+        except Experience.DoesNotExist:
+            raise NotFound
+
+    def get_photo(self, experience_pk, photo_pk):
+        try:
+            return Photo.objects.get(pk=photo_pk, experience=experience_pk)
+        except Photo.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, pk, photo_pk):
+        experience = self.get_experience(pk)
+        if experience.host != request.user:
+            raise PermissionDenied
+        photo = self.get_photo(pk, photo_pk)
+        experience_photos = Photo.objects.filter(experience=experience)\
+            .order_by("-created_at")
+        thumbnail_photo = experience_photos.filter(is_thumbnail=True)
+        if photo.is_thumbnail:
+            raise ParseError("This photo is already a thumbnail.")
+        for a_photo in thumbnail_photo:
+            a_photo.is_thumbnail = False
+            a_photo.save()
+        photo.is_thumbnail = True
+        photo.save()
+        return Response(status=status.HTTP_200_OK)

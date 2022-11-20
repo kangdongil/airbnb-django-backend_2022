@@ -2,9 +2,10 @@ from rest_framework.serializers import ModelSerializer, SerializerMethodField
 from .models import Experience, Perk
 from common.serializers import TinyUserSerializer
 from wishlists.models import Wishlist
+from medias.models import Photo
 from categories.serializers import CategorySerializer
 from reviews.serializers import ReviewSerializer
-
+from medias.serializers import PhotoSerializer
 
 class PerkSerializer(ModelSerializer):
     class Meta:
@@ -14,6 +15,10 @@ class PerkSerializer(ModelSerializer):
 
 class WishlistExperienceSerializer(ModelSerializer):
     
+    photos = PhotoSerializer(
+        read_only=True,
+        many=True,
+    )
     is_liked = SerializerMethodField()
 
     class Meta:
@@ -22,6 +27,7 @@ class WishlistExperienceSerializer(ModelSerializer):
             "pk",
             "name",
             "price",
+            "photos",
             "is_liked",
         )
     
@@ -35,6 +41,7 @@ class WishlistExperienceSerializer(ModelSerializer):
 
 class HostExperienceSerializer(ModelSerializer):
 
+    preview_photo = SerializerMethodField()
     rating = SerializerMethodField()
     total_reviews = SerializerMethodField()
 
@@ -43,6 +50,7 @@ class HostExperienceSerializer(ModelSerializer):
         fields=(
             "pk",
             "name",
+            "preview_photo",
             "rating",
             "total_reviews",
         )
@@ -53,9 +61,22 @@ class HostExperienceSerializer(ModelSerializer):
     def get_total_reviews(self, experience):
         return experience.total_reviews
 
+    def get_preview_photo(self, experience):
+        try:
+            preview_photo = Photo.objects.get(
+                experience=experience,
+                is_thumbnail=True,
+            )
+        except Photo.DoesNotExist:
+            return
+        return PhotoSerializer(preview_photo).data
 
 class ExperienceListSerializer(ModelSerializer):
 
+    photos = PhotoSerializer(
+        read_only=True,
+        many=True,
+    )
     rating = SerializerMethodField()
     is_owner = SerializerMethodField()
     is_liked = SerializerMethodField()
@@ -65,6 +86,7 @@ class ExperienceListSerializer(ModelSerializer):
         fields = (
             "pk",
             "name",
+            "photos",
             "country",
             "city",
             "price",
@@ -100,7 +122,10 @@ class ExperienceDetailSerializer(ModelSerializer):
         read_only=True,
         many=True,
     )
-    # photos
+    photos = PhotoSerializer(
+        read_only=True,
+        many=True,
+    )
     # video
     rating = SerializerMethodField()
     is_host = SerializerMethodField()
@@ -124,6 +149,7 @@ class ExperienceDetailSerializer(ModelSerializer):
             "is_host",
             "host",
             "category",
+            "photos",
             "perks",
             "reviews",
             "created_at",

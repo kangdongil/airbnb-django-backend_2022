@@ -22,6 +22,17 @@ class Photo(TimeStampedModel):
         blank=True,
         related_name="photos",
     )
+    is_thumbnail = models.BooleanField(
+        default=False
+    )
+
+    @property
+    def event(self):
+        if self.room:
+            return f"Room: {self.room}"
+        elif self.experience:
+            return f"Experience: {self.experience}"
+        return
 
     def __str__(self):
         return "Photo File"

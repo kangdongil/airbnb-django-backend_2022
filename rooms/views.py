@@ -10,6 +10,7 @@ from .serializers import RoomListSerializer, RoomDetailSerializer, AmenitySerial
 from common.paginations import ListPagination, MonthlyBookingPagination
 from categories.models import Category
 from reviews.serializers import ReviewSerializer
+from medias.models import Photo
 from medias.serializers import PhotoSerializer
 from bookings.models import Booking
 from bookings.serializers import PublicBookingSerializer, CreateRoomBookingSerializer, PrivateBookingSerializer, CreateRoomBookingSerializer
@@ -357,3 +358,36 @@ class RoomPhotos(APIView, ListPagination):
                 serializer.errors,
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+
+class RoomThumbnailPhotoSelect(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def get_room(self, pk):
+        try:
+            return Room.objects.get(pk=pk)
+        except Room.DoesNotExist:
+            raise NotFound
+    
+    def get_photo(self, room_pk, photo_pk):
+        try:
+            return Photo.objects.get(pk=photo_pk, room=room_pk)
+        except Photo.DoesNotExist:
+            raise NotFound
+    
+    def put(self, request, pk, photo_pk):
+        room = self.get_room(pk)
+        if room.owner != request.user:
+            raise PermissionDenied
+        photo = self.get_photo(pk, photo_pk)
+        if photo.is_thumbnail:
+            raise ParseError("This photo is already a thumbnail.")
+        room_photos = Photo.objects.filter(room=room).order_by("-created_at")
+        thumbnail_photo = room_photos.filter(is_thumbnail=True)
+        for a_photo in thumbnail_photo:
+            a_photo.is_thumbnail = False
+            a_photo.save()
+        photo.is_thumbnail = True
+        photo.save()
+        return Response(status=status.HTTP_200_OK)

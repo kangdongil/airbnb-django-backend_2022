@@ -2,6 +2,7 @@ from rest_framework.serializers import ModelSerializer, SerializerMethodField
 from .models import Room, Amenity
 from common.serializers import TinyUserSerializer
 from categories.serializers import CategorySerializer
+from medias.models import Photo
 from medias.serializers import PhotoSerializer
 from reviews.serializers import ReviewSerializer
 from wishlists.models import Wishlist
@@ -15,6 +16,7 @@ class AmenitySerializer(ModelSerializer):
 
 class HostRoomSerializer(ModelSerializer):
 
+    preview_photo = SerializerMethodField()
     rating = SerializerMethodField()
     total_reviews = SerializerMethodField()
 
@@ -23,6 +25,7 @@ class HostRoomSerializer(ModelSerializer):
         fields=(
             "pk",
             "name",
+            "preview_photo",
             "kind",
             "rating",
             "total_reviews",
@@ -33,6 +36,16 @@ class HostRoomSerializer(ModelSerializer):
     
     def get_total_reviews(self, room):
         return room.total_reviews()
+    
+    def get_preview_photo(self, room):
+        try:
+            preview_photo = Photo.objects.get(
+                room=room,
+                is_thumbnail=True,
+            )
+        except Photo.DoesNotExist:
+            return
+        return PhotoSerializer(preview_photo).data
 
 
 class WishlistRoomSerializer(ModelSerializer):

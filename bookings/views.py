@@ -47,7 +47,7 @@ class CreateReviewPerBooking(APIView):
             return
     
     def post(self, request, pk):
-        now = timezone.localtime(timezone.now()).date()
+        now = timezone.localtime(timezone.now())
         booking = self.get_booking(pk)
         if (booking.room and booking.room.owner != request.user
             ) or (booking.experience and booking.experience.host != request.user
@@ -59,11 +59,13 @@ class CreateReviewPerBooking(APIView):
                 raise ParseError("Review with this Booking already exists.")
             if (booking.is_cancelled) or (
                 booking.host_approval_state != "confirmed"
-                ) or (now < booking.check_out):
+                ) or (booking.check_out and now.date() < booking.check_out
+                ) or (booking.experience_time and now < booking.experience_time):
                 raise ParseError("Review can be created when Booking is finished.")
             new_review = serializer.save(
                 user=request.user,
                 room=booking.room,
+                experience=booking.experience,
                 booking=booking,
             )
             serializer = ReviewSerializer(new_review)

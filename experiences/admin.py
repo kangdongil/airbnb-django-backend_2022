@@ -10,6 +10,7 @@ class ExperienceAdmin(admin.ModelAdmin):
         "price",
         "event_start",
         "event_end",
+        "event_duration",
         "host",
     )
     list_filter = (

@@ -1,3 +1,4 @@
+from datetime import timedelta
 from django.db import models
 from common.models import TimeStampedModel
 
@@ -14,6 +15,9 @@ class Experience(TimeStampedModel):
     price = models.PositiveIntegerField()
     event_start = models.TimeField()
     event_end = models.TimeField()
+    event_duration = models.DurationField(
+        default=timedelta(hours=2),
+    )
     host = models.ForeignKey(
         "users.User",
         on_delete=models.SET_NULL,
@@ -32,6 +36,20 @@ class Experience(TimeStampedModel):
         null=True,
         blank=True,
     )
+
+    @property
+    def total_reviews(experience):
+        return experience.reviews.count()
+
+    def average_ratings(experience):
+        reviews = experience.reviews.count()
+        if reviews == 0:
+            return 0
+        else:
+            total_ratings = 0
+            for review in experience.reviews.all().values("rating"):
+                total_ratings += review["rating"]
+            return round(total_ratings / reviews, 2)
 
     def __str__(self):
         return self.name

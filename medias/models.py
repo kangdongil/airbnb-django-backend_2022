@@ -22,6 +22,17 @@ class Photo(TimeStampedModel):
         blank=True,
         related_name="photos",
     )
+    is_thumbnail = models.BooleanField(
+        default=False
+    )
+
+    @property
+    def event(self):
+        if self.room:
+            return f"Room: {self.room}"
+        elif self.experience:
+            return f"Experience: {self.experience}"
+        return
 
     def __str__(self):
         return "Photo File"
@@ -33,10 +44,10 @@ class Video(TimeStampedModel):
 
     file = models.URLField()
     description = models.CharField(max_length=250, default="")
-    experience = models.ForeignKey(
+    experience = models.OneToOneField(
         "experiences.Experience",
         on_delete=models.CASCADE,
-        related_name="videos",
+        related_name="video",
     )
 
     def __str__(self):

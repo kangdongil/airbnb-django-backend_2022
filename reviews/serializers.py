@@ -2,6 +2,7 @@ from rest_framework.serializers import ModelSerializer
 from .models import Review
 from common.serializers import TinyUserSerializer
 from common.serializers import TinyRoomSerializer
+from common.serializers import TinyExperienceSerializer
 from bookings.serializers import PublicBookingSerializer
 
 
@@ -20,12 +21,14 @@ class HostReviewSerializer(ModelSerializer):
     
     user = TinyUserSerializer(read_only=True)
     room = TinyRoomSerializer(read_only=True)
+    experience = TinyExperienceSerializer(read_only=True)
 
     class Meta:
         model=Review
         fields = (
             "user",
             "room",
+            "experience",
             "payload",
             "rating",
             "created_at",

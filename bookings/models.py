@@ -65,8 +65,13 @@ class Booking(TimeStampedModel):
     )
 
     def __str__(self):
-        booked_date = datetime.strftime(self.check_in, "%y%m%d")
-        return f"{booked_date}-{self.user}-{self.event_name}"
+        if self.check_in and self.check_out:
+            check_in_date = datetime.strftime(self.check_in, "%y%m%d")
+            check_out_date = datetime.strftime(self.check_out, "%m%d")
+            booking_date = f"{check_in_date}{check_out_date}"
+        elif self.experience_time:
+            booking_date = datetime.strftime(self.experience_time, "%y%m%d%H%M")
+        return f"{booking_date}-{self.user}-{self.event_name}"
     
     @property
     def event_name(booking):
@@ -79,10 +84,12 @@ class Booking(TimeStampedModel):
 
     @property
     def booking_state(booking):
-        now = timezone.localtime(timezone.now()).date()
+        now = timezone.localtime(timezone.now())
         if booking.is_cancelled:
             return "cancelled"
-        if now > booking.check_in:
+        if (booking.check_in and now.date() > booking.check_in) or (
+            booking.experience_time and now > booking.experience_time
+        ):
             if not booking.host_approval_state == "confirmed":
                 return "denied"
             return "finished"

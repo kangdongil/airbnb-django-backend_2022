@@ -8,6 +8,7 @@ from .models import Wishlist
 from .serializers import WishlistSerializer
 from common.paginations import ListPagination
 from rooms.models import Room
+from experiences.models import Experience
 
 
 class WishlistList(APIView, ListPagination):
@@ -30,6 +31,7 @@ class WishlistList(APIView, ListPagination):
         serializer = WishlistSerializer(data=request.data)
         if serializer.is_valid():
             room_pks = request.data.get("rooms")
+            experience_pks = request.data.get("experiences")
             try:
                 with transaction.atomic():
                     new_wishlist = serializer.save(
@@ -39,8 +41,14 @@ class WishlistList(APIView, ListPagination):
                         for room_pk in room_pks:
                             room = Room.objects.get(pk=room_pk)
                             new_wishlist.rooms.add(room)
+                    if experience_pks:
+                        for experience_pk in experience_pks:
+                            experience = Experience.objects.get(pk=experience_pk)
+                            new_wishlist.experiences.add(experience)
             except Room.DoesNotExist:
                 raise ParseError("Room Not Found")
+            except Experience.DoesNotExist:
+                raise ParseError("Experience Not Found")
             except Exception as e:
                 raise ParseError(e)
             serializer = WishlistSerializer(
@@ -81,15 +89,22 @@ class WishlistDetail(APIView):
         )
         if serializer.is_valid():
             room_pks = request.data.get("rooms")
+            experience_pks = request.data.get("experiences")
             try:
                 with transaction.atomic():
                     updated_wishlist = serializer.save()
                     updated_wishlist.rooms.clear()
+                    updated_wishlist.experiences.clear()
                     for room_pk in room_pks:
                         room = Room.objects.get(pk=room_pk)
                         updated_wishlist.rooms.add(room)
+                    for experience_pk in experience_pks:
+                        experience = Experience.objects.get(pk=experience_pk)
+                        updated_wishlist.experiences.add(experience)
             except Room.DoesNotExist:
                 raise ParseError("Room Not Found")
+            except Experience.DoesNotExist:
+                raise ParseError("Experience Not Found")
             except Exception as e:
                 raise ParseError(e)
 
@@ -131,4 +146,28 @@ class WishlistRoomToggle(APIView):
             wishlist.rooms.remove(room)
         else:
             wishlist.rooms.add(room)
+        return Response(status=status.HTTP_200_OK)
+
+
+class WishlistExperienceToggle(APIView):
+
+    def get_list(self, pk, owner):
+        try:
+            return Wishlist.objects.get(pk=pk, owner=owner)
+        except Wishlist.DoesNotExist:
+            raise NotFound
+    
+    def get_experience(self, pk):
+        try:
+            return Experience.objects.get(pk=pk)
+        except Experience.DoesNotExist:
+            raise NotFound
+    
+    def put(self, request, pk, experience_pk):
+        wishlist = self.get_list(pk, request.user)
+        experience = self.get_experience(pk=experience_pk)
+        if wishlist.experiences.filter(pk=experience.pk).exists():
+            wishlist.experiences.remove(experience)
+        else:
+            wishlist.experiences.add(experience)
         return Response(status=status.HTTP_200_OK)

@@ -1,6 +1,7 @@
 from rest_framework.serializers import ModelSerializer, SerializerMethodField
 from .models import Experience, Perk
 from common.serializers import TinyUserSerializer
+from wishlists.models import Wishlist
 from categories.serializers import CategorySerializer
 from reviews.serializers import ReviewSerializer
 
@@ -9,6 +10,27 @@ class PerkSerializer(ModelSerializer):
     class Meta:
         model = Perk
         fields = "__all__"
+
+
+class WishlistExperienceSerializer(ModelSerializer):
+    
+    is_liked = SerializerMethodField()
+
+    class Meta:
+        model = Experience
+        fields = (
+            "pk",
+            "name",
+            "price",
+            "is_liked",
+        )
+    
+    def get_is_liked(self, experience):
+        request = self.context["request"]
+        return Wishlist.objects.filter(
+            owner=request.user,
+            experiences__pk=experience.pk,
+        ).exists()
 
 
 class HostExperienceSerializer(ModelSerializer):
@@ -36,6 +58,7 @@ class ExperienceListSerializer(ModelSerializer):
 
     rating = SerializerMethodField()
     is_owner = SerializerMethodField()
+    is_liked = SerializerMethodField()
 
     class Meta:
         model = Experience
@@ -47,6 +70,7 @@ class ExperienceListSerializer(ModelSerializer):
             "price",
             "rating",
             "is_owner",
+            "is_liked",
         )
 
     def get_rating(self, experience):
@@ -55,6 +79,13 @@ class ExperienceListSerializer(ModelSerializer):
     def get_is_owner(self, experience):
         request = self.context["request"]
         return experience.host == request.user
+
+    def get_is_liked(self, experience):
+        request = self.context["request"]
+        return Wishlist.objects.filter(
+            owner=request.user,
+            experiences__pk=experience.pk,
+        ).exists()
 
 
 class ExperienceDetailSerializer(ModelSerializer):
@@ -73,6 +104,7 @@ class ExperienceDetailSerializer(ModelSerializer):
     # video
     rating = SerializerMethodField()
     is_host = SerializerMethodField()
+    is_liked = SerializerMethodField()
 
     class Meta:
         model = Experience
@@ -85,6 +117,7 @@ class ExperienceDetailSerializer(ModelSerializer):
             "address",
             "rating",
             "price",
+            "is_liked",
             "event_start",
             "event_end",
             "event_duration",
@@ -103,3 +136,10 @@ class ExperienceDetailSerializer(ModelSerializer):
     def get_is_host(self, experience):
         request = self.context["request"]
         return experience.host == request.user
+
+    def get_is_liked(self, experience):
+        request = self.context["request"]
+        return Wishlist.objects.filter(
+            owner=request.user,
+            experiences__pk=experience.pk,
+        ).exists()

@@ -10,6 +10,7 @@ from .serializers import ExperienceListSerializer, ExperienceDetailSerializer, P
 from common.paginations import ListPagination, MonthlyBookingPagination
 from categories.models import Category
 from bookings.models import Booking
+from experiences.models import Experience
 from bookings.serializers import PublicBookingSerializer, PrivateBookingSerializer, CreateExperienceBookingSerializer
 from reviews.serializers import ReviewSerializer
 

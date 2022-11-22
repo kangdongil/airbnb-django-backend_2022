@@ -968,3 +968,5 @@ class Model(TimeStampedModel):
 [x] ExperiencePhotos
 [x] ThumbnailPhotoSelect
 [x] VideoDetail & OneToOneField
+
+`poetry add django-cors-headers`

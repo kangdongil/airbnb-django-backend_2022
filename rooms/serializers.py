@@ -79,6 +79,7 @@ class WishlistRoomSerializer(ModelSerializer):
 class RoomListSerializer(ModelSerializer):
 
     rating = SerializerMethodField()
+    preview_photo = SerializerMethodField()
     is_owner = SerializerMethodField()
     is_liked = SerializerMethodField()
 
@@ -91,6 +92,7 @@ class RoomListSerializer(ModelSerializer):
             "city",
             "price",
             "rating",
+            "preview_photo",
             "is_owner",
             "is_liked",
         )
@@ -104,10 +106,23 @@ class RoomListSerializer(ModelSerializer):
 
     def get_is_liked(self, room):
         request = self.context["request"]
-        return Wishlist.objects.filter(
+        try:
+            return Wishlist.objects.filter(
             owner=request.user,
             rooms__pk=room.pk,
-        ).exists()
+            ).exists()
+        except: 
+            return
+    
+    def get_preview_photo(self, room):
+        try:
+            preview_photo = Photo.objects.get(
+                room=room,
+                is_thumbnail=True,
+            )
+        except Photo.DoesNotExist:
+            return
+        return PhotoSerializer(preview_photo).data
 
 
 class RoomDetailSerializer(ModelSerializer):

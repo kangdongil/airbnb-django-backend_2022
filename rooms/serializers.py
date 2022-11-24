@@ -70,10 +70,12 @@ class WishlistRoomSerializer(ModelSerializer):
 
     def get_is_liked(self, room):
         request = self.context["request"]
-        return Wishlist.objects.filter(
+        if request.user.is_authenticated:
+            return Wishlist.objects.filter(
             owner=request.user,
             rooms__pk=room.pk,
-        ).exists()
+            ).exists()
+        return False
 
 
 class RoomListSerializer(ModelSerializer):
@@ -106,13 +108,12 @@ class RoomListSerializer(ModelSerializer):
 
     def get_is_liked(self, room):
         request = self.context["request"]
-        try:
+        if request.user.is_authenticated:
             return Wishlist.objects.filter(
             owner=request.user,
             rooms__pk=room.pk,
             ).exists()
-        except: 
-            return
+        return False
     
     def get_preview_photo(self, room):
         try:
@@ -153,7 +154,9 @@ class RoomDetailSerializer(ModelSerializer):
     
     def get_is_liked(self, room):
         request = self.context["request"]
-        return Wishlist.objects.filter(
+        if request.user.is_authenticated:
+            return Wishlist.objects.filter(
             owner=request.user,
             rooms__pk=room.pk,
-        ).exists()
+            ).exists()
+        return False

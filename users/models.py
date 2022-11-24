@@ -31,7 +31,7 @@ class User(AbstractUser):
         max_length=150,
         editable=False,
     )
-    avatar = models.ImageField(blank=True)
+    avatar = models.URLField(blank=True)
     is_host = models.BooleanField(default=False)
     gender = models.CharField(
         max_length=10,

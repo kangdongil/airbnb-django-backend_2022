@@ -1,4 +1,4 @@
-from rest_framework.serializers import ModelSerializer
+from rest_framework.serializers import ModelSerializer, SerializerMethodField
 from .models import Review
 from common.serializers import TinyUserSerializer
 from common.serializers import TinyRoomSerializer
@@ -8,6 +8,8 @@ from bookings.serializers import PublicBookingSerializer
 
 class UserReviewSerializer(ModelSerializer):
     
+    created_at = SerializerMethodField()
+
     class Meta:
         model=Review
         fields = (
@@ -16,6 +18,9 @@ class UserReviewSerializer(ModelSerializer):
             "created_at",
         )
 
+    def get_created_at(self, review):
+        created_at = review.created_at
+        return created_at.strftime("%B %Y")
 
 class HostReviewSerializer(ModelSerializer):
     
@@ -39,6 +44,7 @@ class ReviewSerializer(ModelSerializer):
     
     user = TinyUserSerializer(read_only=True)
     booking = PublicBookingSerializer(read_only=True)
+    created_at = SerializerMethodField()
 
     class Meta:
         model=Review
@@ -49,3 +55,7 @@ class ReviewSerializer(ModelSerializer):
             "rating",
             "created_at",
         )
+
+    def get_created_at(self, review):
+        created_at = review.created_at
+        return created_at.strftime("%B %Y")

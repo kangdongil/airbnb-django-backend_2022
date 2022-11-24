@@ -142,6 +142,7 @@ class RoomDetailSerializer(ModelSerializer):
         read_only=True,
         many=True,
     )
+    rating = SerializerMethodField()
     total_reviews = SerializerMethodField()
     is_liked = SerializerMethodField()
 
@@ -151,7 +152,11 @@ class RoomDetailSerializer(ModelSerializer):
 
     def get_total_reviews(self, room):
         return room.total_reviews()
-    
+
+    def get_rating(self, room):
+        rating = room.average_ratings()
+        return f"{rating:.2f}"
+
     def get_is_liked(self, room):
         request = self.context["request"]
         if request.user.is_authenticated:

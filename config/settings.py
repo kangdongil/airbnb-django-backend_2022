@@ -164,3 +164,7 @@ MEDIA_URL = "uploads/"
 # CORS_ALLOWED_ORIGINS = ["http://3000-kangdongil-gpreactdjang-ijumdskuh65.ws-us77.gitpod.io"]
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+
+#
+
+GH_SECRET = env("GH_SECRET")

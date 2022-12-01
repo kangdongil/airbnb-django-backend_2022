@@ -224,7 +224,10 @@ class LogIn(APIView):
             login(request, user)
             return Response({"ok": "Welcome!"})
         else:
-            return Response({"error": "Wrong Password"})
+            return Response(
+                {"error": "Wrong Password"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class LogOut(APIView):
@@ -277,4 +280,52 @@ class GithubLogin(APIView):
                 login(request, user)
             return Response(status=status.HTTP_200_OK)
         except Exception as e:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class KakaoLogin(APIView):
+
+    def post(Self, request):
+        try:
+            code = request.data.get("code")
+            print(code)
+            access_token = requests.post(
+                "https://kauth.kakao.com/oauth/token",
+                headers={
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                data={
+                    "grant_type": "authorization_code",
+                    "client_id": "d10eb532115da07d88f76bde78b9c993",
+                    "redirect_uri": "https://3000-kangdongil-gpreactdjang-ijumdskuh65.ws-us77.gitpod.io/social/kakao",
+                    "code": code,
+                },
+            )
+            access_token = access_token.json().get("access_token")
+            user_data = requests.get(
+                "https://kapi.kakao.com/v2/user/me",
+                headers={
+                    "Authorization": f"Bearer {access_token}",
+                    "Content-type": "application/x-www-form-urlencoded;charset=utf-8",
+                },
+            ).json()
+            kakao_account = user_data.get("kakao_account")
+            profile = kakao_account.get("profile")
+            try:
+                user = User.objects.get(email=kakao_account.get("email"))
+                login(request, user)
+                return Response(status=status.HTTP_200_OK)
+            except User.DoesNotExist:
+                user = User.objects.create(
+                    email=kakao_account.get("email"),
+                    username=profile.get("nickname"),
+                    name=profile.get("nickname"),
+                    avatar=profile.get("profile_image_url"),
+                )
+                user.set_unusable_password()
+                user.save()
+                login(request, user)
+                return Response(status=status.HTTP_200_OK)
+        except Exception as e:
+            print(e)
             return Response(status=status.HTTP_400_BAD_REQUEST)

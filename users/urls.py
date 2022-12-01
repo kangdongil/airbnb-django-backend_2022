@@ -14,5 +14,6 @@ urlpatterns = [
     path("change-password", views.ChangePassword.as_view()),
     path("log-in", views.LogIn.as_view()),
     path("github", views.GithubLogin.as_view()),
+    path("kakao", views.KakaoLogin.as_view()),
     path("log-out", views.LogOut.as_view()),
 ]

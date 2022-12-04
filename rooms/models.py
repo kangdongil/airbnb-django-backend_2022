@@ -40,6 +40,9 @@ class Room(TimeStampedModel):
         null=True,
         blank=True,
     )
+    pet_friendly = models.BooleanField(
+        default=False,
+    )
 
     def total_reviews(room):
         return room.reviews.count()

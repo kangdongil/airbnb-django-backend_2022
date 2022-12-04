@@ -5,4 +5,8 @@ from .models import Category
 class CategorySerializer(ModelSerializer):
     class Meta:
         model = Category
-        fields = "__all__"
+        fields = fields = (
+            "pk",
+            "name",
+            "kind",
+        )

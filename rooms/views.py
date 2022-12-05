@@ -115,7 +115,7 @@ class RoomList(APIView, ListPagination):
                 raise ParseError("Category not found.")
             try:
                 with transaction.atomic():
-                    new_rooms = serializer.save(
+                    new_room = serializer.save(
                         owner=request.user,
                         category=category,
                     )
@@ -127,7 +127,10 @@ class RoomList(APIView, ListPagination):
                 raise ParseError("Amenity Not Found")
             except Exception as e:
                 raise ParseError(e)
-            serializer = RoomDetailSerializer(new_rooms)
+            serializer = RoomDetailSerializer(
+                new_room,
+                context={"request": request},
+            )
             return Response(serializer.data)
         else:
             return Response(

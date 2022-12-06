@@ -165,6 +165,10 @@ MEDIA_URL = "uploads/"
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
-#
+# GitHub Social Login
 
 GH_SECRET = env("GH_SECRET")
+
+# Cloudfare Images Fetch
+CF_ID = env("CF_ID")
+CF_TOKEN = env("CF_TOKEN")

@@ -40,10 +40,6 @@ RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
-if DEBUG:
-    CSRF_TRUSTED_ORIGINS = [env("GITPOD_DOMAIN_URL")]
-    CSRF_COOKIE_DOMAIN = env("GITPOD_DOMAIN")
-
 # Application definition
 
 SYSTEM_APPS = [
@@ -182,9 +178,24 @@ MEDIA_URL = "uploads/"
 # CORS Allowed Origins
 # https://github.com/adamchainz/django-cors-headers
 
-# CORS_ALLOWED_ORIGINS = ["http://3000-kangdongil-gpreactdjang-ijumdskuh65.ws-us77.gitpod.io"]
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS_ALLOW_ALL_ORIGINS = True
+#CORS_ALLOWED_ORIGINS = ["https://3000-kangdongil-gpreactdjang-ijumdskuh65.ws-us78.gitpod.io"]
+
+CORS_ALLOWED_ORIGIN_REGEXES = []
+CSRF_TRUSTED_ORIGINS = []
 CORS_ALLOW_CREDENTIALS = True
+
+if DEBUG:
+    CORS_ALLOWED_ORIGIN_REGEXES.append(
+        rf"^https://([a-zA-Z0-9-]+).{env('GITPOD_SUBDOMAIN')}.gitpod.io$")
+    CSRF_TRUSTED_ORIGINS.append(
+        f"https://*.{env('GITPOD_SUBDOMAIN')}.gitpod.io")
+    CSRF_COOKIE_DOMAIN = f".{env('GITPOD_SUBDOMAIN')}.gitpod.io"
+else:
+    CORS_ALLOWED_ORIGIN_REGEXES.append(
+        rf"^https://([a-zA-Z0-9-]+).onrender.com$")
+    CSRF_TRUSTED_ORIGINS.append("https://airbnbclone-uk8m.onrender.com/")
+    CSRF_COOKIE_DOMAIN = ".onrender.com"
 
 # GitHub Social Login
 

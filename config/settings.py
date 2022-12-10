@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 from pathlib import Path
 import os
 import environ
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
 import dj_database_url
 
 env = environ.Env()
@@ -191,3 +193,13 @@ GH_SECRET = env("GH_SECRET")
 # Cloudfare Images Fetch
 CF_ID = env("CF_ID")
 CF_TOKEN = env("CF_TOKEN")
+
+#
+
+if not DEBUG:
+    sentry_sdk.init(
+        dsn="https://5029e8c1f021449a9f9e7c0e8d29d026@o4504298871259136.ingest.sentry.io/4504298876895232",
+        integrations=[DjangoIntegration()],
+        traces_sample_rate=1.0,
+        send_default_pii=True,
+    )

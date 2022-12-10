@@ -30,7 +30,7 @@ class AmenityList(APIView, ListPagination):
             "page": self.paginated_info,
             "content": serializer.data,
         })
-    
+
     def post(self, request):
         serializer = AmenitySerializer(
             data=request.data
@@ -55,7 +55,7 @@ class AmenityDetail(APIView):
             return Amenity.objects.get(pk=pk)
         except Amenity.DoesNotExist:
             raise NotFound
-    
+
     def get(self, request, pk):
         amenity = self.get_object(pk)
         serializer = AmenitySerializer(amenity)
@@ -91,7 +91,7 @@ class RoomList(APIView, ListPagination):
     def get(self, request):
         all_rooms = Room.objects.all()
         serializer = RoomListSerializer(
-            self.paginate(all_rooms,request),
+            self.paginate(all_rooms, request),
             many=True,
             context={"request": request},
         )
@@ -99,7 +99,7 @@ class RoomList(APIView, ListPagination):
             "page": self.paginated_info,
             "content": serializer.data,
         })
-    
+
     def post(self, request):
         serializer = RoomDetailSerializer(data=request.data)
         if serializer.is_valid():
@@ -148,7 +148,7 @@ class RoomDetail(APIView):
             return Room.objects.get(pk=pk)
         except Room.DoesNotExist:
             raise NotFound
-    
+
     def get(self, request, pk):
         room = self.get_object(pk)
         serializer = RoomDetailSerializer(
@@ -156,7 +156,7 @@ class RoomDetail(APIView):
             context={"request": request},
         )
         return Response(serializer.data)
-    
+
     def put(self, request, pk):
         room = self.get_object(pk=pk)
         if room.owner != request.user:
@@ -173,7 +173,8 @@ class RoomDetail(APIView):
                 try:
                     category = Category.objects.get(pk=category_pk)
                     if category.kind != Category.CategoryKindChoices.ROOM:
-                        raise ParseError("The category's kind should be 'room'.")
+                        raise ParseError(
+                            "The category's kind should be 'room'.")
                 except Category.DoesNotExist:
                     raise ParseError("Category not found.")
             try:
@@ -191,7 +192,7 @@ class RoomDetail(APIView):
                 raise ParseError("Amenity Not Found")
             except Exception as e:
                 raise ParseError(e)
-            
+
             serializer = RoomDetailSerializer(
                 updated_room,
                 context={"request": request},
@@ -209,13 +210,13 @@ class RoomDetail(APIView):
 class RoomReviews(APIView, ListPagination):
 
     permission_classes = [IsAuthenticatedOrReadOnly]
-    
+
     def get_object(self, pk):
         try:
             return Room.objects.get(pk=pk)
         except Room.DoesNotExist:
             raise NotFound
-    
+
     def get(self, request, pk):
         room = self.get_object(pk)
         reviews = room.reviews.all()
@@ -227,18 +228,18 @@ class RoomReviews(APIView, ListPagination):
             "page": self.paginated_info,
             "content": serializer.data,
         })
-    
+
     def post(self, request, pk):
         room = self.get_object(pk)
         serializer = ReviewSerializer(data=request.data)
         if serializer.is_valid():
             review = serializer.save(
-                user = request.user,
-                room = room,
+                user=request.user,
+                room=room,
             )
             serializer = ReviewSerializer(review)
             return Response(serializer.data)
-        
+
 
 class RoomAmenities(APIView, ListPagination):
 
@@ -249,7 +250,7 @@ class RoomAmenities(APIView, ListPagination):
             return Room.objects.get(pk=pk)
         except Room.DoesNotExist:
             raise NotFound
-    
+
     def get(self, request, pk):
         room = self.get_object(pk)
         amenities = room.amenities.all()
@@ -309,7 +310,7 @@ class RoomBookings(APIView, MonthlyBookingPagination):
             "page": self.paginated_info,
             "content": serializer.data,
         })
-    
+
     def post(self, request, pk):
         room = self.get_object(pk)
         serializer = CreateRoomBookingSerializer(
@@ -340,7 +341,7 @@ class RoomPhotos(APIView, ListPagination):
             return Room.objects.get(pk=pk)
         except Room.DoesNotExist:
             raise NotFound
-    
+
     def get(self, request, pk):
         room = self.get_object(pk)
         photos = room.photos.all()
@@ -375,13 +376,13 @@ class RoomThumbnailPhotoSelect(APIView):
             return Room.objects.get(pk=pk)
         except Room.DoesNotExist:
             raise NotFound
-    
+
     def get_photo(self, room_pk, photo_pk):
         try:
             return Photo.objects.get(pk=photo_pk, room=room_pk)
         except Photo.DoesNotExist:
             raise NotFound
-    
+
     def put(self, request, pk, photo_pk):
         room = self.get_room(pk)
         if room.owner != request.user:
@@ -398,6 +399,7 @@ class RoomThumbnailPhotoSelect(APIView):
         photo.save()
         return Response(status=status.HTTP_200_OK)
 
+
 class RoomBookingCheck(APIView):
 
     def get_object(self, pk):
@@ -405,15 +407,19 @@ class RoomBookingCheck(APIView):
             return Room.objects.get(pk=pk)
         except Room.DoesNotExist:
             raise NotFound
-    
+
     def get(self, request, pk):
         room = self.get_object(pk)
         check_in = request.query_params.get("check_in")
         check_out = request.query_params.get("check_out")
         if Booking.objects.filter(
             room=room,
-            check_in__lte = check_out,
-            check_out__gte = check_in,
+            check_in__lte=check_out,
+            check_out__gte=check_in,
         ).exists():
             return Response({"ok": False})
         return Response({"ok": True})
+
+
+def make_error(request):
+    division_by_zero = 1 / 0

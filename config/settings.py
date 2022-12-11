@@ -34,7 +34,10 @@ SECRET_KEY = env("SECRET_KEY")
 # DEBUG = True
 DEBUG = "RENDER" not in os.environ
 
-ALLOWED_HOSTS = ["localhost"]
+ALLOWED_HOSTS = [
+    "localhost",
+    "backend.noru-place.xyz",
+]
 
 RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 if RENDER_EXTERNAL_HOSTNAME:
@@ -194,8 +197,12 @@ if DEBUG:
 else:
     CORS_ALLOWED_ORIGIN_REGEXES.append(
         rf"^https://([a-zA-Z0-9-]+).onrender.com$")
-    CSRF_TRUSTED_ORIGINS.append("https://airbnbclone-uk8m.onrender.com/")
-    CSRF_COOKIE_DOMAIN = ".onrender.com"
+    CORS_ALLOWED_ORIGIN_REGEXES.append(
+        r"^https://noru-place.xyz$")
+    CSRF_TRUSTED_ORIGINS.append("https://airbnbclone-uk8m.onrender.com")
+    CSRF_TRUSTED_ORIGINS.append("https://noru-place.xyz")
+    SESSION_COOKIE_DOMAIN = ".noru-place.xyz"
+    CSRF_COOKIE_DOMAIN = ".noru-place.xyz"
 
 # GitHub Social Login
 

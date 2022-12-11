@@ -204,6 +204,14 @@ else:
     SESSION_COOKIE_DOMAIN = ".noru-place.xyz"
     CSRF_COOKIE_DOMAIN = ".noru-place.xyz"
 
+# Authentication
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+    ]
+}
+
 # GitHub Social Login
 
 GH_SECRET = env("GH_SECRET")
